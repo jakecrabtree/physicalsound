@@ -115,7 +115,8 @@ void refitAABB(const RigidBodyInstance * instance, AABBNode *node)
         }
         for(int k=0; k<4; k++)
         {
-            Eigen::Vector3d point = instance->c + VectorMath::rotationMatrix(instance->theta)*instance->getTemplate().getVerts().row(tet[k]).transpose();
+            //Eigen::Vector3d point = instance->c + VectorMath::rotationMatrix(instance->theta)*instance->getTemplate().getVerts().row(tet[k]).transpose();
+			Eigen::Vector3d point = instance->V.row(tet[k]).transpose();
             for(int l=0; l<3; l++)
             {
                 node->box.mins[l] = min(node->box.mins[l], point[l]);
@@ -152,8 +153,9 @@ AABBNode *buildAABB(const RigidBodyInstance * instance)
         }
         for(int k=0; k<4; k++)
         {
-            Eigen::Vector3d point = instance->c + VectorMath::rotationMatrix(instance->theta)*instance->getTemplate().getVerts().row(tet[k]).transpose();
-            for(int l=0; l<3; l++)
+            //Eigen::Vector3d point = instance->c + VectorMath::rotationMatrix(instance->theta)*instance->getTemplate().getVerts().row(tet[k]).transpose();
+            Eigen::Vector3d point = instance->V.row(tet[k]).transpose();
+			for(int l=0; l<3; l++)
             {
                 box.mins[l] = min(box.mins[l], point[l]);
                 box.maxs[l] = max(box.maxs[l], point[l]);
@@ -189,8 +191,10 @@ void tetTetIntersect(const AABBNode *node1, const AABBNode *node2, int body1, in
     Eigen::Vector3d verts2[4];
     for(int i=0; i<4; i++)
     {
-        verts1[i] = instances[body1]->c + VectorMath::rotationMatrix(instances[body1]->theta)*instances[body1]->getTemplate().getVerts().row(tet1[i]).transpose();
-        verts2[i] = instances[body2]->c + VectorMath::rotationMatrix(instances[body2]->theta)*instances[body2]->getTemplate().getVerts().row(tet2[i]).transpose();
+        //verts1[i] = instances[body1]->c + VectorMath::rotationMatrix(instances[body1]->theta)*instances[body1]->getTemplate().getVerts().row(tet1[i]).transpose();
+        //verts2[i] = instances[body2]->c + VectorMath::rotationMatrix(instances[body2]->theta)*instances[body2]->getTemplate().getVerts().row(tet2[i]).transpose();
+		verts1[i] = instances[body1]->V.row(tet1[i]).transpose();
+		verts2[i] = instances[body2]->V.row(tet2[i]).transpose();
     }
     for(int i=0; i<4; i++)
     {
@@ -277,8 +281,9 @@ void collisionDetection(const std::vector<RigidBodyInstance *> instances, std::s
         int nverts = instances[i]->getTemplate().getVerts().rows();
         for (int j = 0; j < nverts; j++)
         {
-            Eigen::Vector3d point = VectorMath::rotationMatrix(instances[i]->theta) * instances[i]->getTemplate().getVerts().row(j).transpose() + instances[i]->c;
-            if (point[1] <= -1.0)
+            //Eigen::Vector3d point = VectorMath::rotationMatrix(instances[i]->theta) * instances[i]->getTemplate().getVerts().row(j).transpose() + instances[i]->c;
+			Eigen::Vector3d point = instances[i]->V.row(j).transpose();
+			if (point[1] <= -1.0)
             {
                 Collision c;
                 c.body1 = i;

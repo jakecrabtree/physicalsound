@@ -27,6 +27,7 @@ public:
 
     double distance(Eigen::Vector3d p, int tet) const;
     Eigen::Vector3d Ddistance(int tet) const;
+	Eigen::Matrix3d cuteLilFunction(int tet) const;	
 
 private:
     RigidBodyTemplate(const RigidBodyTemplate &other) = delete;

@@ -278,15 +278,58 @@ void RigidBodyTemplate::computePointVolumes() {
     }
 }
 
+Eigen::Matrix3d RigidBodyTemplate::cuteLilFunction(int tet) const {
+	double x1 = V(T(tet, 0), 0);
+	double x2 = V(T(tet, 1), 0);
+	double x3 = V(T(tet, 2), 0);
+	double x4 = V(T(tet, 3), 0);	
+	double y1 = V(T(tet, 0), 1);
+	double y2 = V(T(tet, 1), 1);
+	double y3 = V(T(tet, 2), 1);
+	double y4 = V(T(tet, 3), 1);
+	double z1 = V(T(tet, 0), 2);
+	double z2 = V(T(tet, 1), 2);
+	double z3 = V(T(tet, 2), 2);
+	double z4 = V(T(tet, 3), 2);
+	Eigen::Matrix3d linTrans;
+	linTrans(0, 0) = x1 - x4;
+	linTrans(0, 1) = x2 - x4;
+	linTrans(0, 2) = x3 - x4; 
+	linTrans(1, 0) = y1 - y4;
+	linTrans(1, 1) = y2 - y4;
+	linTrans(1, 2) = y3 - y4; 
+	linTrans(2, 0) = z1 - z4;
+	linTrans(2, 1) = z2 - z4;
+	linTrans(2, 2) = z3 - z4;
+    return linTrans;
+}
+
+//p must be in template coordinates
 double RigidBodyTemplate::distance(Vector3d p, int tet) const
 {
-    // TODO compute distance from point to object boundary
-    return 0;
+    double x4 = V(T(tet, 3), 0);	
+    double y4 = V(T(tet, 3), 1);
+    double z4 = V(T(tet, 3), 2);
+    Eigen::Matrix3d linTrans = cuteLilFunction(tet);
+
+	Vector3d bary = linTrans.inverse() * (p - Eigen::Vector3d(x4, y4, z4));
+	double last = 1 - bary[0] - bary[1] - bary[2];
+    double ret = bary[0] * distances[T(tet, 0)] + bary[1] * distances[T(tet, 1)] + bary[2] * distances[T(tet, 2)] + last * distances[T(tet, 3)];
+    return ret;
 }
 
 Vector3d RigidBodyTemplate::Ddistance(int tet) const
 {
-    //TODO: compute derivative of distance from point to boundary
+    Eigen::Matrix3d linTrans = cuteLilFunction(tet);
+    double d0 = distances[T(tet, 0)];
+    double d1 = distances[T(tet, 1)];
+    double d2 = distances[T(tet, 2)];
+    double d3 = distances[T(tet, 3)];
     Vector3d result(0, 0, 0);
-    return result;
+    result[0] = d0 - d3;
+    result[1] = d1 - d3;
+    result[2] = d2 - d3;
+
+    Vector3d ret = (result.transpose() * linTrans.inverse());//.transpose(); //todo hmmmmmmm
+    return ret;
 }

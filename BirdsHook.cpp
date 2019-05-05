@@ -175,6 +175,26 @@ bool BirdsHook::simulateOneStep()
     Eigen::VectorXd cForce;
     Eigen::VectorXd thetaForce;
     computeForces(cForce, thetaForce);
+	
+	//Collision stuff
+	std::set<Collision> collisions;
+	collisionDetection(bodies_, collisions);
+	std::vector<int> pre;
+	pre.push_back(0);
+	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+		pre.push_back(pre[bodyidx] + bodies_[bodyidx]->getTemplate().getVerts().rows());
+	}
+	for(const Collision& collision: collisions) {
+		if(collision.body2 == -1) {
+			std::cout << "I WAS RIGHT\n";
+			int vidx = collision.collidingVertex;
+			double vy = bodies_[collision.body1]->V(vidx, 1);
+			double dist = vy + 1;
+			cForce[3 * pre[collision.body1] + 3 * vidx + 1] += -1 * params_.penaltyStiffness * dist;
+		} else {
+			std::cout << "I WAS WROGN\n";
+		}
+	}
 
     int counter = 0;
     for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
