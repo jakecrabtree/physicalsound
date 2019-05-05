@@ -21,11 +21,9 @@ RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
 	}
 	Vdot = Eigen::MatrixXd(V.rows(), V.cols());
 	Vdot.setZero();
-	for(int i = 0; i  < Vdot.rows(); i++) {
-		Vdot.row(i) = Vector3d(0, i % 3 == 0 ? 0.2 : -0.2 , 0);
+	for(int i = 0; i < Vdot.rows(); i++) {
+		Vdot.row(i) = cvel;
 	}
-	Vmass = VectorXd(V.rows());
-	Vmass.setZero();
 }
 
 RigidBodyInstance::~RigidBodyInstance()

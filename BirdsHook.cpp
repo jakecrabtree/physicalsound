@@ -121,17 +121,25 @@ void BirdsHook::tick()
 
 void BirdsHook::computeForces(VectorXd &Fc, VectorXd &Ftheta)
 {
-    Fc.resize(3*bodies_.size());
-    Ftheta.resize(3*bodies_.size());
+    int numVerts = 0;
+    for(int i=0; i<bodies_.size(); i++)
+    {
+        numVerts += bodies_[i]->getTemplate().getVerts().rows();
+    }
+    Fc.resize(3*numVerts);
+   // Ftheta.resize(3*bodies_.size());
     Fc.setZero();
-    Ftheta.setZero();    
-
+   // Ftheta.setZero();    
     if(params_.gravityEnabled)
     {
+        int count = 0;
         for(int i=0; i<bodies_.size(); i++)
         {
-            double m = bodies_[i]->density * bodies_[i]->getTemplate().getVolume();
-            Fc[3 * i + 1] -= params_.gravityG*m;
+            int numRows = bodies_[i]->getTemplate().getVerts().rows();
+            for (int p = 0; p < numRows; ++p){
+                double m = bodies_[i]->density * bodies_[i]->getTemplate().getVvol()[p];
+                Fc[3*count++ + 1] -= params_.gravityG*m;
+            }
         }
     }
 }
@@ -164,6 +172,18 @@ bool BirdsHook::simulateOneStep()
 		RigidBodyInstance &body = *bodies_[bodyidx];
 		body.V += params_.timeStep * body.Vdot;
 	}
+    Eigen::VectorXd cForce;
+    Eigen::VectorXd thetaForce;
+    computeForces(cForce, thetaForce);
+
+    int counter = 0;
+    for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+		RigidBodyInstance &body = *bodies_[bodyidx];
+        int numRows = body.getTemplate().getVerts().rows();
+        for (int p = 0; p < numRows; ++p){
+            body.Vdot.row(p) += params_.timeStep*cForce.segment<3>(3 * counter++) / body.density / body.getTemplate().getVvol()[p];
+        }
+	}    
 	return false;
 }
 

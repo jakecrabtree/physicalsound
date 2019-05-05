@@ -21,6 +21,9 @@ public:
     const Eigen::MatrixX3d &getVerts() const {return V;}
     const Eigen::MatrixX3i &getFaces() const {return F;}      
     const Eigen::MatrixX4i &getTets() const { return T; }
+    const Eigen::VectorXd  &getVvol() const { return Vvol; }
+    const Eigen::VectorXd  &getTvol() const { return Tvol; }
+
 
     double distance(Eigen::Vector3d p, int tet) const;
     Eigen::Vector3d Ddistance(int tet) const;
@@ -37,12 +40,12 @@ private:
     void computeInertiaTensor();
     void computeDistances();
 	void computeTetVols();
-	void computePointMasses();	
+	void computePointVolumes();	
     
     Eigen::MatrixX3d V;
     Eigen::MatrixX3i F;
     Eigen::MatrixX4i T;
-	Eigen::VectorXd Vmass;
+	Eigen::VectorXd Vvol;
 	Eigen::VectorXd Tvol;	
 
     std::vector<double> distances;

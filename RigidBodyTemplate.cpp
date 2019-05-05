@@ -47,7 +47,7 @@ void RigidBodyTemplate::initialize()
     computeInertiaTensor();    
     computeDistances();
 	computeTetVols();
-	computePointMasses();
+	computePointVolumes();
 }
 
 void RigidBodyTemplate::computeFaces()
@@ -253,11 +253,29 @@ void RigidBodyTemplate::computeDistances()
 
 void RigidBodyTemplate::computeTetVols()
 {
-
+    Tvol.resize(T.rows());
+    for (int r = 0; r < Tvol.size(); ++r){
+        Vector3d m0 = V.row(T(r, 0));        
+        Vector3d m1 = V.row(T(r, 1));
+        Vector3d m2 = V.row(T(r, 2));
+        Vector3d m3 = V.row(T(r, 3));
+        Tvol[r] = std::abs((1.0/6.0) * ((m1 - m0).cross(m2 - m0)).dot(m3-m0));
+    }
 }
 
-void RigidBodyTemplate::computePointMasses() {
-
+void RigidBodyTemplate::computePointVolumes() {
+    Vvol.resize(V.rows());
+    Vvol.setZero();
+    for (int r = 0; r < Tvol.size(); ++r){
+        int p0 = T(r, 0);        
+        int p1 = T(r, 1);
+        int p2 = T(r, 2);
+        int p3 = T(r, 3);
+        Vvol[p0] += Tvol[r]/4.0;
+        Vvol[p1] += Tvol[r]/4.0;
+        Vvol[p2] += Tvol[r]/4.0;
+        Vvol[p3] += Tvol[r]/4.0;
+    }
 }
 
 double RigidBodyTemplate::distance(Vector3d p, int tet) const
