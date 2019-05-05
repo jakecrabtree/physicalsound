@@ -15,6 +15,17 @@ RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
     : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate)
 {
     AABB = buildAABB(this);
+	V = getTemplate().getVerts();
+	for(int i = 0; i < V.rows(); i++) {
+		V.row(i) = (c + VectorMath::rotationMatrix(theta)* V.row(i).transpose()).transpose();
+	}
+	Vdot = Eigen::MatrixXd(V.rows(), V.cols());
+	Vdot.setZero();
+	for(int i = 0; i  < Vdot.rows(); i++) {
+		Vdot.row(i) = Vector3d(0, i % 3 == 0 ? 0.2 : -0.2 , 0);
+	}
+	Vmass = VectorXd(V.rows());
+	Vmass.setZero();
 }
 
 RigidBodyInstance::~RigidBodyInstance()

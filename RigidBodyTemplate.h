@@ -36,10 +36,14 @@ private:
     Eigen::Vector3d computeCenterOfMass();
     void computeInertiaTensor();
     void computeDistances();
+	void computeTetVols();
+	void computePointMasses();	
     
     Eigen::MatrixX3d V;
     Eigen::MatrixX3i F;
     Eigen::MatrixX4i T;
+	Eigen::VectorXd Vmass;
+	Eigen::VectorXd Tvol;	
 
     std::vector<double> distances;
     

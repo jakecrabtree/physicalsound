@@ -18,7 +18,10 @@ public:
     Eigen::Vector3d theta;
 
     Eigen::Vector3d cvel;
-    Eigen::Vector3d w;
+    Eigen::Vector3d w;	
+
+    Eigen::MatrixX3d V;
+	Eigen::MatrixX3d Vdot;
 
     double density;
 

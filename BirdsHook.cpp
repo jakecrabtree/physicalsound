@@ -75,8 +75,10 @@ void BirdsHook::updateRenderGeometry()
     for (RigidBodyInstance *rbi : bodies_)
     {
         int nverts = rbi->getTemplate().getVerts().rows();
-        for (int i = 0; i < nverts; i++)
-            renderQ.row(voffset + i) = (rbi->c + VectorMath::rotationMatrix(rbi->theta)*rbi->getTemplate().getVerts().row(i).transpose()).transpose();
+        for (int i = 0; i < nverts; i++) {
+            //renderQ.row(voffset + i) = (rbi->c + VectorMath::rotationMatrix(rbi->theta)*rbi->getTemplate().getVerts().row(i).transpose()).transpose();
+			renderQ.row(voffset + i) = (rbi->V.row(i));
+		}
         int nfaces = rbi->getTemplate().getFaces().rows();
         for (int i = 0; i < nfaces; i++)
         {
@@ -155,6 +157,17 @@ bool BirdsHook::mouseClicked(igl::opengl::glfw::Viewer &viewer, Eigen::Vector3d 
 }
 
 bool BirdsHook::simulateOneStep()
+{
+	time_ += params_.timeStep;
+	int nbodies = (int)bodies_.size();
+	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+		RigidBodyInstance &body = *bodies_[bodyidx];
+		body.V += params_.timeStep * body.Vdot;
+	}
+	return false;
+}
+
+/*bool BirdsHook::simulateOneStep()
 {   
     time_ += params_.timeStep;
     int nbodies = (int)bodies_.size();
@@ -217,7 +230,7 @@ bool BirdsHook::simulateOneStep()
     }
 
     return false;
-}
+}*/
 
 void BirdsHook::loadScene()
 {

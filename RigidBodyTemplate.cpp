@@ -46,6 +46,8 @@ void RigidBodyTemplate::initialize()
 
     computeInertiaTensor();    
     computeDistances();
+	computeTetVols();
+	computePointMasses();
 }
 
 void RigidBodyTemplate::computeFaces()
@@ -247,6 +249,15 @@ void RigidBodyTemplate::computeDistances()
         }
         distances[i] = dist;        
     }
+}
+
+void RigidBodyTemplate::computeTetVols()
+{
+
+}
+
+void RigidBodyTemplate::computePointMasses() {
+
 }
 
 double RigidBodyTemplate::distance(Vector3d p, int tet) const
