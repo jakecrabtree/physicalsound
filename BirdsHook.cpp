@@ -142,6 +142,21 @@ void BirdsHook::computeForces(VectorXd &Fc, VectorXd &Ftheta)
             }
         }
     }
+    int count = 0;
+    for(int i = 0; i < bodies_.size(); i++) {
+        int numRows = bodies_[i]->getTemplate().getVerts().rows();
+        int numTets = bodies_[i]->getTemplate().getTets().rows();
+        for(int t = 0; t < numTets; t++) {
+            for(int j = 0; j < 4; j++) {
+                Vector3d toAdd = bodies_[i]->elasticForce(t,j);
+                int vidx = bodies_[i]->getTemplate().getTets()(t,j);
+                Fc[count + 3 * vidx] += toAdd[0];
+                Fc[count + 3 * vidx + 1] += toAdd[1];
+                Fc[count + 3 * vidx + 2] += toAdd[2];
+            }
+        }
+        count += 3 * numRows;
+    }
 }
 
 bool BirdsHook::mouseClicked(igl::opengl::glfw::Viewer &viewer, Eigen::Vector3d dir, int button)
@@ -186,14 +201,11 @@ bool BirdsHook::simulateOneStep()
 	}
 	for(const Collision& collision: collisions) {
 		if(collision.body2 == -1) {
-			std::cout << "I WAS RIGHT\n";
 			int vidx = collision.collidingVertex;
 			double vy = bodies_[collision.body1]->V(vidx, 1);
 			double dist = vy + 1;
 			cForce[3 * pre[collision.body1] + 3 * vidx + 1] += -1 * params_.penaltyStiffness * dist;
-		} else {
-			std::cout << "I WAS WROGN\n";
-		}
+		} 
 	}
 
     int counter = 0;

@@ -48,6 +48,7 @@ void RigidBodyTemplate::initialize()
     computeDistances();
 	computeTetVols();
 	computePointVolumes();
+    computeBeta();
 }
 
 void RigidBodyTemplate::computeFaces()
@@ -275,6 +276,23 @@ void RigidBodyTemplate::computePointVolumes() {
         Vvol[p1] += Tvol[r]/4.0;
         Vvol[p2] += Tvol[r]/4.0;
         Vvol[p3] += Tvol[r]/4.0;
+    }
+}
+
+void RigidBodyTemplate::computeBeta(){
+    betas.clear();
+    for (int r = 0; r < Tvol.size(); ++r){
+        Vector3d m0 = V.row(T(r, 0));        
+        Vector3d m1 = V.row(T(r, 1));
+        Vector3d m2 = V.row(T(r, 2));
+        Vector3d m3 = V.row(T(r, 3));
+        Matrix4d beta;
+        beta << m0[0], m1[0], m2[0], m3[0],
+                m0[1], m1[1], m2[1], m3[1],
+                m0[2], m1[2], m2[2], m3[2],
+                1, 1, 1, 1;
+        beta = beta.inverse();
+        betas.push_back(beta);
     }
 }
 

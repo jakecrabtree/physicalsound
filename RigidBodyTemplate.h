@@ -23,6 +23,8 @@ public:
     const Eigen::MatrixX4i &getTets() const { return T; }
     const Eigen::VectorXd  &getVvol() const { return Vvol; }
     const Eigen::VectorXd  &getTvol() const { return Tvol; }
+    const std::vector<Eigen::Matrix4d>  &getBetas() const { return betas; }
+
 
 
     double distance(Eigen::Vector3d p, int tet) const;
@@ -42,12 +44,14 @@ private:
     void computeDistances();
 	void computeTetVols();
 	void computePointVolumes();	
+    void computeBeta();
     
     Eigen::MatrixX3d V;
     Eigen::MatrixX3i F;
     Eigen::MatrixX4i T;
 	Eigen::VectorXd Vvol;
 	Eigen::VectorXd Tvol;	
+    std::vector<Eigen::Matrix4d> betas;
 
     std::vector<double> distances;
     
