@@ -89,7 +89,8 @@ bool drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
 {
     if (ImGui::CollapsingHeader("Simulation Control", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        if (ImGui::Button("Run/Pause Sim", ImVec2(-1, 0)))
+		
+        if (hook->isPaused() ? ImGui::Button("Run Sim", ImVec2(-1, 0)) : ImGui::Button("Pause Sim", ImVec2(-1, 0)))
         {
             toggleSimulation();
         }

@@ -32,9 +32,13 @@ Vector3d RigidBodyInstance::partialX(int tet, int i){
 	Vector3d p2 = V.row(getTemplate().getTets()(tet, 2));
 	Vector3d p3 = V.row(getTemplate().getTets()(tet, 3));
 	Matrix<double, 3, 4> p;
-	p << p0[0], p1[0], p2[0], p3[0],
+	p.col(0) = p0;
+	p.col(1) = p1;
+	p.col(2) = p2;
+	p.col(3) = p3;
+	/*p << p0[0], p1[0], p2[0], p3[0],
 		 p0[1], p1[1], p2[1], p3[1],
-		 p0[2], p1[2], p2[2], p3[2];
+		 p0[2], p1[2], p2[2], p3[2];*/
 	Vector4d kd;
 	kd.setZero();
 	kd[i] = 1;

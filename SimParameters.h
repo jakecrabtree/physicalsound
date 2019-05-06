@@ -5,7 +5,7 @@ struct SimParameters
 {
     SimParameters()
     {
-        timeStep = 0.001;
+        timeStep = 0.0001;
         NewtonMaxIters = 50;
         NewtonTolerance = 1e-8;
         
