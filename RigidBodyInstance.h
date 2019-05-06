@@ -39,7 +39,9 @@ public:
 private:
     const RigidBodyTemplate &rbtemplate_;
     Eigen::Vector3d partialX(int tet, int i);
+    void partialXMatrix(int tet, Eigen::Matrix3d& Xpartials);
     Eigen::Vector3d partialXdot(int tet, int i);
+    void partialXdotMatrix(int tet, Eigen::Matrix3d& Xdotpartials);
     void strainTensor(int tet, Eigen::Matrix3d& epsilon, Eigen::Matrix3d& Xpartials);
     void strainRateTensor(int tet, Eigen::Matrix3d& nu, Eigen::Matrix3d& Xpartials, Eigen::Matrix3d& Xdotpartials);
     void stressTensor(int tet, Eigen::Matrix3d& sigma);
