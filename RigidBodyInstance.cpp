@@ -61,55 +61,59 @@ double RigidBodyInstance::kd(int i, int j){
 }
 
 
-Eigen::Matrix3d RigidBodyInstance::strainRateTensor(int tet){
-	Matrix3d nu;
-	for (int i = 0; i < nu.rows(); ++i){
-		for (int j = 0; j < nu.cols(); ++j){
-			nu(i,j) = partialX(tet, i).dot(partialXdot(tet, j));
-			nu(i,j) += partialX(tet, j).dot(partialXdot(tet, i));
+void RigidBodyInstance::strainRateTensor(int tet, Eigen::Matrix3d& nu, Eigen::Matrix3d& Xpartials, Eigen::Matrix3d& Xdotpartials){
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			nu(i,j) = Xpartials.col(i).dot(Xdotpartials.col(j));
+			nu(i,j) += Xpartials.col(j).dot(Xdotpartials.col(i));
 		}
 	}
-	return nu;
 }
 
 
-Matrix3d RigidBodyInstance::strainTensor(int tet){
-	Matrix3d epsilon;
-	for (int i = 0; i < epsilon.rows(); ++i){
-		for (int j = 0; j < epsilon.cols(); ++j){
-			epsilon(i,j) = partialX(tet, i).dot(partialX(tet, j)) - kd(i,j);
+void RigidBodyInstance::strainTensor(int tet, Eigen::Matrix3d& epsilon, Eigen::Matrix3d& Xpartials){
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
+			epsilon(i,j) = Xpartials.col(i).dot(Xpartials.col(j)) - kd(i,j);
 		}
 	}
-	return epsilon;
 }
 
-Matrix3d RigidBodyInstance::stressTensor(int tet){
-	Matrix3d sigma;
+void RigidBodyInstance::stressTensor(int tet, Eigen::Matrix3d& sigma){
 	sigma.setZero();
-	Matrix3d nu = strainRateTensor(tet);
-	Matrix3d epsilon = strainTensor(tet);
-	for (int i = 0; i < sigma.rows(); ++i){
-		for (int j = 0; j < sigma.cols(); ++j){
+	Matrix3d Xpartials;
+	Matrix3d Xdotpartials;
+	Xpartials.col(0) = partialX(tet, 0);
+	Xpartials.col(1) = partialX(tet, 1);
+	Xpartials.col(2) = partialX(tet, 2);
+	Xdotpartials.col(0) = partialXdot(tet, 0);
+	Xdotpartials.col(1) = partialXdot(tet, 1);
+	Xdotpartials.col(2) = partialXdot(tet, 2);
+	Matrix3d nu;
+	strainRateTensor(tet, nu, Xpartials, Xdotpartials);
+	Matrix3d epsilon;
+	strainTensor(tet, epsilon, Xpartials);
+	for (int i = 0; i < 3; ++i){
+		for (int j = 0; j < 3; ++j){
 			for (int k = 0; k < 3; ++k){
 				sigma(i,j) += lambda * epsilon(k,k) * kd(i,j) + 2.0 * mu * epsilon(i,j);
 				sigma(i,j) += phi * nu(k,k) * kd(i,j) + 2.0 * psi * nu(i,j);
 			}
 		}
 	}
-	return sigma;
 }
 
 Vector3d RigidBodyInstance::elasticForce(int tet, int i){
 	Vector3d force;
 	force.setZero();
-	Matrix3d sigma = stressTensor(tet);
-
+	Matrix3d sigma;
+	stressTensor(tet, sigma);
 	Vector4i vertIndices = getTemplate().getTets().row(tet);
 	for (int j = 0; j < vertIndices.size(); ++j){
 		Vector3d pj = V.row(vertIndices[j]);
 		double mag = 0;
-		for (int k = 0; k < pj.size(); ++k){
-			for (int l = 0; l < pj.size(); ++l){
+		for (int k = 0; k < 3; ++k){
+			for (int l = 0; l < 3; ++l){
 				mag += getTemplate().getBetas()[tet](j,l) * getTemplate().getBetas()[tet](i,k) * sigma(k,l);
 			}
 		}

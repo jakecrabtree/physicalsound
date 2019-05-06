@@ -28,10 +28,10 @@ public:
     AABBNode *AABB;
     
     const RigidBodyTemplate &getTemplate() const {return rbtemplate_;}
-    double lambda = 1;
-    double mu = 1;
-    double phi = 1;
-    double psi = 1;
+    double lambda = 161.65;
+    double mu = 80.827;
+    double phi = 0;
+    double psi = 0;
 
     Eigen::Vector3d elasticForce(int tet, int i);
 
@@ -40,9 +40,9 @@ private:
     const RigidBodyTemplate &rbtemplate_;
     Eigen::Vector3d partialX(int tet, int i);
     Eigen::Vector3d partialXdot(int tet, int i);
-    Eigen::Matrix3d strainTensor(int tet);
-    Eigen::Matrix3d strainRateTensor(int tet);
-    Eigen::Matrix3d stressTensor(int tet);
+    void strainTensor(int tet, Eigen::Matrix3d& epsilon, Eigen::Matrix3d& Xpartials);
+    void strainRateTensor(int tet, Eigen::Matrix3d& nu, Eigen::Matrix3d& Xpartials, Eigen::Matrix3d& Xdotpartials);
+    void stressTensor(int tet, Eigen::Matrix3d& sigma);
     double kd(int i, int j);
 };
 
