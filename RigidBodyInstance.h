@@ -28,10 +28,10 @@ public:
     AABBNode *AABB;
     
     const RigidBodyTemplate &getTemplate() const {return rbtemplate_;}
-    double lambda = 161.65;
-    double mu = 80.827;
-    double phi = 0;
-    double psi = 0;
+    double lambda = 100 * 161.65;
+    double mu = 100 * 80.827;
+    double phi = .02;
+    double psi = .02;
 
     Eigen::Vector3d elasticForce(int tet, int i);
 

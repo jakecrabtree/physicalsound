@@ -34,7 +34,12 @@ void BirdsHook::drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
         ImGui::InputFloat("Penalty Stiffness", &params_.penaltyStiffness, 0, 0, 3);
         ImGui::Checkbox("Impulses Enabled", &params_.impulsesEnabled);
         ImGui::InputFloat("CoR", &params_.CoR, 0, 0, 3);
-    }    
+    } 
+	if (ImGui::CollapsingHeader("Soft Body", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::InputFloat("Young's Modulus", &params_.young, 0, 0, 3);
+		ImGui::InputFloat("Poisson Ratio", &params_.poisson, 0, 0, 3);
+	} 
 }
 
 void BirdsHook::updateRenderGeometry()
@@ -186,6 +191,11 @@ bool BirdsHook::simulateOneStep()
 	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
 		RigidBodyInstance &body = *bodies_[bodyidx];
 		body.V += params_.timeStep * body.Vdot;
+		//TODO get rid of this, setting all lambdas and mus to same slide bar
+		double v = (double) params_.poisson;
+		double E = (double) params_.young;
+		body.lambda = v * E / ((1 + v) * (1 - 2 * v));
+		body.mu = E / (2 * (1 + v));
 	}
     Eigen::VectorXd cForce;
     Eigen::VectorXd thetaForce;

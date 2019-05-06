@@ -15,6 +15,8 @@ struct SimParameters
         penaltyStiffness = 1.0;
         impulsesEnabled = true;
         CoR = 0.5;
+		young = 165;
+		poisson = .33;
     }
 
     float timeStep;
@@ -27,6 +29,8 @@ struct SimParameters
     float penaltyStiffness;
     bool impulsesEnabled;
     float CoR;
+	float young;
+	float poisson;
 };
 
 #endif
