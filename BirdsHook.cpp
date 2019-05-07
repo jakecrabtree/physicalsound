@@ -59,6 +59,7 @@ void BirdsHook::updateRenderGeometry()
     }
     renderQ.resize(totverts, 3);
     renderF.resize(totfaces, 3);
+	renderC.resize(totfaces, 3);
     int voffset = 0;
     int foffset = 0;
 
@@ -77,6 +78,10 @@ void BirdsHook::updateRenderGeometry()
     renderF.row(3) << 0, 1, 4;
     foffset += 4;
 
+	renderC.row(0) << 0, 1, 0;
+	renderC.row(1) << 0, 1, 0;
+	renderC.row(2) << 0, 1, 0;
+	renderC.row(3) << 0, 1, 0;
     for (RigidBodyInstance *rbi : bodies_)
     {
         int nverts = rbi->getTemplate().getVerts().rows();
@@ -91,6 +96,7 @@ void BirdsHook::updateRenderGeometry()
             {
                 renderF(foffset + i, j) = rbi->getTemplate().getFaces()(i, j) + voffset;
             }
+			renderC.row(foffset + i) << 1, 0, 0;
         }
         voffset += nverts;
         foffset += nfaces;

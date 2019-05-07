@@ -32,6 +32,7 @@ public:
     {
         viewer.data().clear();
         viewer.data().set_mesh(renderQ, renderF);
+		viewer.data().set_colors(renderC);
     }
 
 private:
@@ -54,5 +55,5 @@ private:
 
     Eigen::MatrixXd renderQ;
     Eigen::MatrixXi renderF;
-
+	Eigen::MatrixXd renderC;
 };
