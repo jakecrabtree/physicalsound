@@ -167,3 +167,59 @@ Vector3d RigidBodyInstance::elasticForce(int tet, int i){
 RigidBodyInstance::~RigidBodyInstance()
 {    
 }
+
+Eigen::Matrix3d RigidBodyInstance::cuteLilFunction(int tet) const {
+	double x1 = V(getTemplate().getTets()(tet, 0), 0);
+	double x2 = V(getTemplate().getTets()(tet, 1), 0);
+	double x3 = V(getTemplate().getTets()(tet, 2), 0);
+	double x4 = V(getTemplate().getTets()(tet, 3), 0);	
+	double y1 = V(getTemplate().getTets()(tet, 0), 1);
+	double y2 = V(getTemplate().getTets()(tet, 1), 1);
+	double y3 = V(getTemplate().getTets()(tet, 2), 1);
+	double y4 = V(getTemplate().getTets()(tet, 3), 1);
+	double z1 = V(getTemplate().getTets()(tet, 0), 2);
+	double z2 = V(getTemplate().getTets()(tet, 1), 2);
+	double z3 = V(getTemplate().getTets()(tet, 2), 2);
+	double z4 = V(getTemplate().getTets()(tet, 3), 2);
+	Eigen::Matrix3d linTrans;
+	linTrans(0, 0) = x1 - x4;
+	linTrans(0, 1) = x2 - x4;
+	linTrans(0, 2) = x3 - x4; 
+	linTrans(1, 0) = y1 - y4;
+	linTrans(1, 1) = y2 - y4;
+	linTrans(1, 2) = y3 - y4; 
+	linTrans(2, 0) = z1 - z4;
+	linTrans(2, 1) = z2 - z4;
+	linTrans(2, 2) = z3 - z4;
+    return linTrans;
+}
+
+//p must be in template coordinates
+double RigidBodyInstance::distance(Vector3d p, int tet) const
+{
+    double x4 = V(getTemplate().getTets()(tet, 3), 0);	
+    double y4 = V(getTemplate().getTets()(tet, 3), 1);
+    double z4 = V(getTemplate().getTets()(tet, 3), 2);
+    Eigen::Matrix3d linTrans = cuteLilFunction(tet);
+
+	Vector3d bary = linTrans.inverse() * (p - Eigen::Vector3d(x4, y4, z4));
+	double last = 1 - bary[0] - bary[1] - bary[2];
+    double ret = bary[0] * getTemplate().getDistance(getTemplate().getTets()(tet, 0)) + bary[1] * getTemplate().getDistance(getTemplate().getTets()(tet, 1)) + bary[2] * getTemplate().getDistance(getTemplate().getTets()(tet, 2)) + last * getTemplate().getDistance(getTemplate().getTets()(tet, 3));
+    return ret;
+}
+
+Vector3d RigidBodyInstance::Ddistance(int tet) const
+{
+    Eigen::Matrix3d linTrans = cuteLilFunction(tet);
+    double d0 = getTemplate().getDistance(getTemplate().getTets()(tet, 0));
+    double d1 = getTemplate().getDistance(getTemplate().getTets()(tet, 1));
+    double d2 = getTemplate().getDistance(getTemplate().getTets()(tet, 2));
+    double d3 = getTemplate().getDistance(getTemplate().getTets()(tet, 3));
+    Vector3d result(0, 0, 0);
+    result[0] = d0 - d3;
+    result[1] = d1 - d3;
+    result[2] = d2 - d3;
+
+    Vector3d ret = (result.transpose() * linTrans.inverse());//.transpose(); //todo hmmmmmmm
+    return ret;
+}

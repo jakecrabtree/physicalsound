@@ -19,9 +19,21 @@ RigidBodyTemplate::RigidBodyTemplate(const std::string &meshFilename, double sca
     igl::readOBJ(meshFilename, mV, mF);
 
     mV *= scale;
-
-    igl::copyleft::tetgen::tetrahedralize(mV, mF, "pq1.414a0.01", V, T, F);
-    computeFaces();
+	
+    igl::copyleft::tetgen::tetrahedralize(mV, mF, "pq10.414a0.21", V, T, F);
+    /*V.resize(4, 3);
+	V.row(0) = Eigen::Vector3d(0, 0, 0);
+	V.row(1) = Eigen::Vector3d(1, 0, 0);
+	V.row(2) = Eigen::Vector3d(0, 1, 0);
+	V.row(3) = Eigen::Vector3d(0, 0, 1);
+	F.resize(4, 3);
+	F.row(0) = Eigen::Vector3i(0, 1, 2);
+	F.row(1) = Eigen::Vector3i(0, 2, 3);
+	F.row(2) = Eigen::Vector3i(0, 3, 1);
+	F.row(3) = Eigen::Vector3i(1, 3, 2);
+	T.resize(1, 4);
+	T.row(0) = Eigen::Vector4i(0, 1, 2, 3);*/
+	computeFaces();
     initialize();
 }
 

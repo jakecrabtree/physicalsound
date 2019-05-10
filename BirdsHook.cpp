@@ -160,6 +160,12 @@ void BirdsHook::computeForces(VectorXd &Fc, VectorXd &Ftheta)
         for(int t = 0; t < numTets; t++) {
             for(int j = 0; j < 4; j++) {
                 Vector3d toAdd = bodies_[i]->elasticForce(t,j);
+				//double v = toAdd.norm();
+				//toAdd.setZero();
+				/*if(v > .00001) {
+					std::cout << toAdd << "\n";
+					exit(0);
+				}*/
                 int vidx = bodies_[i]->getTemplate().getTets()(t,j);
                 Fc[count + 3 * vidx] += toAdd[0];
                 Fc[count + 3 * vidx + 1] += toAdd[1];
@@ -221,6 +227,10 @@ bool BirdsHook::simulateOneStep()
 			double vy = bodies_[collision.body1]->V(vidx, 1);
 			double dist = vy + 1;
 			cForce[3 * pre[collision.body1] + 3 * vidx + 1] += -1 * params_.penaltyStiffness * dist;
+		} else {
+			int vidx = collision.collidingVertex;
+			double dist = bodies_[collision.body2]->distance(bodies_[collision.body1]->V.row(vidx).transpose(), collision.collidingTet);
+			cForce.segment<3>(3 * pre[collision.body1] + 3 * vidx) += -1.0 * params_.penaltyStiffness * dist * bodies_[collision.body2]->Ddistance(collision.collidingTet).transpose();
 		} 
 	}
 
