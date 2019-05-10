@@ -22,7 +22,7 @@ void BirdsHook::drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
     }
     if (ImGui::CollapsingHeader("Simulation Options", ImGuiTreeNodeFlags_DefaultOpen))
     {
-        ImGui::InputFloat("Timestep", &params_.timeStep, 0, 0, 3);
+        ImGui::InputFloat("Timestep", &params_.timeStep, 0, 0, 6);
         ImGui::DragFloat("Newton Tolerance", &params_.NewtonTolerance, 0.01, 1e-16, 1e-1, "%.3e", 10);
         ImGui::InputInt("Newton Max Iters", &params_.NewtonMaxIters);
     }
@@ -37,8 +37,8 @@ void BirdsHook::drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
     } 
 	if (ImGui::CollapsingHeader("Soft Body", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::InputFloat("Young's Modulus", &params_.young, 0, 0, 3);
-		ImGui::InputFloat("Poisson Ratio", &params_.poisson, 0, 0, 3);
+		ImGui::InputFloat("Young's Modulus", &params_.young, 0, 0, 6);
+		ImGui::InputFloat("Poisson Ratio", &params_.poisson, 0, 0, 6);
 	} 
 }
 
@@ -233,7 +233,7 @@ bool BirdsHook::simulateOneStep()
 			cForce.segment<3>(3 * pre[collision.body1] + 3 * vidx) += -1.0 * params_.penaltyStiffness * dist * bodies_[collision.body2]->Ddistance(collision.collidingTet).transpose();
 		} 
 	}
-
+	aud.vol = .01 * collisions.size();
     int counter = 0;
     for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
 		RigidBodyInstance &body = *bodies_[bodyidx];

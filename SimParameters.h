@@ -12,7 +12,7 @@ struct SimParameters
         gravityEnabled = true;
         gravityG = 9.8;                
         penaltyEnabled = true;
-        penaltyStiffness = 1.0;
+        penaltyStiffness = 100.0;
         impulsesEnabled = true;
         CoR = 0.5;
 		young = 165;

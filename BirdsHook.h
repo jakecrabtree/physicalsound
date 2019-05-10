@@ -7,6 +7,7 @@
 #include "SimParameters.h"
 #include <set>
 #include "CollisionDetection.h"
+#include <AudioPlayer.h>
 
 class RigidBodyTemplate;
 class RigidBodyInstance;
@@ -14,7 +15,7 @@ class RigidBodyInstance;
 class BirdsHook : public PhysicsHook
 {
 public:
-    BirdsHook();    
+    BirdsHook();
 
     virtual void drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu);
 
@@ -56,4 +57,6 @@ private:
     Eigen::MatrixXd renderQ;
     Eigen::MatrixXi renderF;
 	Eigen::MatrixXd renderC;
+
+	AudioPlayer aud;
 };

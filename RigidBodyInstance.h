@@ -30,8 +30,8 @@ public:
     const RigidBodyTemplate &getTemplate() const {return rbtemplate_;}
     double lambda = 100 * 161.65;
     double mu = 100 * 80.827;
-    double phi = .02;
-    double psi = .02;
+    double phi = .2;
+    double psi = .2;
 
     Eigen::Vector3d elasticForce(int tet, int i);
 

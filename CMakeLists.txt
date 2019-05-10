@@ -24,8 +24,11 @@ option(LIBIGL_WITH_VIEWER           "Use OpenGL viewer"  ON)
 option(LIBIGL_WITH_XML              "Use XML"            OFF)
 
 find_package(LIBIGL REQUIRED QUIET)
+find_package(SDL2 REQUIRED)
+
+include_directories(${SDL2_INCLUDE_DIRS} .)
 
 # Add your project files
 file(GLOB SRCFILES *.cpp)
 add_executable(${PROJECT_NAME}_bin ${SRCFILES})
-target_link_libraries(${PROJECT_NAME}_bin igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::tetgen)
+target_link_libraries(${PROJECT_NAME}_bin igl::core igl::opengl_glfw igl::opengl_glfw_imgui igl::tetgen ${SDL2_LIBRARIES})
