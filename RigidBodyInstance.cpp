@@ -12,7 +12,7 @@ RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
     const Eigen::Vector3d &c, const Eigen::Vector3d &theta,
     const Eigen::Vector3d &cvel, const Eigen::Vector3d &w,
     double density)
-    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate)
+    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate)//, facePressures(std::ceil(6.0/(22050.0*timeStep)))
 {
 	V = getTemplate().getVerts();
 	for(int i = 0; i < V.rows(); i++) {
@@ -239,6 +239,8 @@ void RigidBodyInstance::computeFacePressures(Eigen::VectorXd& pressures){
 		Vector3d vel = (Vdot.row(i0) + Vdot.row(i1) + Vdot.row(i2))/3.0;
 		double pressure = acousticImpedance * vel.dot(norm);
 		pressures[i] = pressure;
-	}
+	}	
 }
+
+
 
