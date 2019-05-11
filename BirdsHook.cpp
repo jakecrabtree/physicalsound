@@ -352,6 +352,7 @@ bool BirdsHook::simulateOneStep()
 	return false;
 }
 
+
 /*bool BirdsHook::simulateOneStep()
 {   
     time_ += params_.timeStep;

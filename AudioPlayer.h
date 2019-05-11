@@ -3,8 +3,10 @@
 #include <fstream>
 #include <cstdint>
 #include <cmath>
-#include <queue>
 #include <vector>
+#include <math.h>
+#include <cassert>
+#include <queue>
 #include <mutex>
 
 class Sample {
@@ -106,5 +108,40 @@ class AudioPlayer {
 		SDL_PauseAudio(1);
 		SDL_CloseAudio();
 	}
+
+	static std::vector<double> lowPassFilter(float cutoffFrequency, float sampleFrequency, int order){
+		std::vector<double> filter(order); 
+		cutoffFrequency /= sampleFrequency;
+		double cutoffOmega = 2 * M_PI * cutoffFrequency;
+		int middle = order / 2;
+		for (int i = -1*order / 2; i <= order / 2; ++i){
+			if (i == 0){
+				filter[i] = 2*cutoffFrequency;
+			} else{
+				filter[i + middle] = std::sin(cutoffOmega*i) / M_PI*i;
+			}
+		} 
+		return filter;
+	}
+
+	static void convolutionFilter(std::vector<double>& samples, const std::vector<double>& filter, std::vector<double>& filteredSamples){
+		filteredSamples.resize(samples.size());
+		for (int m = 0; m < samples.size(); ++m){
+			filteredSamples[m] = 0;
+			for (int n = 0; n < filter.size(); ++n){
+				if (n - m > 0){
+					filteredSamples[m] += filter[m] * samples[n-m]; 
+				}
+			}
+		}
+	}
+
+	static void dcBlockingFilter(const std::vector<double>& samples, std::vector<double>& filteredSamples, double lossConstant){
+		filteredSamples.resize(samples.size());
+		filteredSamples[0] = samples[0];
+		for (int i = 1; i < samples.size(); ++i){
+			filteredSamples[i] = (1.0 - lossConstant) * filteredSamples[i-1] + samples[i] - samples[i-1];
+		}
+	} 
 };
 
