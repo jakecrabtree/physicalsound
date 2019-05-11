@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
 
     hook = new BirdsHook();
     hook->reset(0);
+    ((BirdsHook*)(hook))->setCamera(&viewer.core.camera_base_translation);
 
     viewer.data().set_face_based(true);
     viewer.core.is_animating = true;    
