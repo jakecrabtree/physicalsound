@@ -26,7 +26,7 @@ public:
     /*
      * Runs once when the simulation is initialized, and again each time the user resets the simulation.
      */
-    virtual void initSimulation() = 0;
+    virtual void initSimulation(int arg) = 0;
 
     /*
      * Called every once in a while (and always before every simulation step) even if the simulation is paused.
@@ -77,12 +77,12 @@ public:
     /*
      * Resets the simulation (and leaves it in a paused state; call run() to start it).
      */
-    void reset()
+    void reset(int arg)
     {
         killSimThread();
         please_die = running = false;
         please_pause = true;
-        initSimulation();
+        initSimulation(arg);
         updateRenderGeometry();
         sim_thread = new std::thread(&PhysicsHook::runSimThread, this);
     }

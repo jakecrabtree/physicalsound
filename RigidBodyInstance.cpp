@@ -226,7 +226,7 @@ Vector3d RigidBodyInstance::Ddistance(int tet) const
 
 void RigidBodyInstance::computeFacePressures(Eigen::VectorXd& pressures){
 	pressures.setZero();
-	pressures.resize(getTemplate().getFaces().size());
+	pressures.resize(getTemplate().getFaces().rows());
 	for (int i = 0; i < pressures.size(); ++i){
 		int i0 = getTemplate().getFaces()(i, 0);
 		int i1 = getTemplate().getFaces()(i, 1);

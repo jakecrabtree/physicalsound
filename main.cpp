@@ -20,12 +20,12 @@ void toggleSimulation()
         hook->pause();
 }
 
-void resetSimulation()
+void resetSimulation(int arg)
 {
     if (!hook)
         return;
 
-    hook->reset();
+    hook->reset(arg);
 }
 
 bool drawCallback(igl::opengl::glfw::Viewer &viewer)
@@ -96,8 +96,12 @@ bool drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
         }
         if (ImGui::Button("Reset Sim", ImVec2(-1, 0)))
         {
-            resetSimulation();
+            resetSimulation(0);
         }
+		if (ImGui::Button("Reset Render", ImVec2(-1, 0)))
+		{
+			resetSimulation(1);
+		}
     }
     hook->drawGUI(menu);
     return false;
@@ -108,7 +112,7 @@ int main(int argc, char *argv[])
     igl::opengl::glfw::Viewer viewer;
 
     hook = new BirdsHook();
-    hook->reset();
+    hook->reset(0);
 
     viewer.data().set_face_based(true);
     viewer.core.is_animating = true;    

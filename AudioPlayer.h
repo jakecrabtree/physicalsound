@@ -1,9 +1,11 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <fstream>
 #include <cstdint>
 #include <cmath>
 #include <queue>
 #include <vector>
+#include <mutex>
 
 class Sample {
 	public:
@@ -20,9 +22,10 @@ class AudioPlayer {
 	public:
 	long sampleID = 0;
 	double vol = 0;
-	std::priority_queue<Sample, std::vector<Sample>> pq;
+	static const int ssize = 44100 * 20;
+	std::vector<double> samples;
+	std::mutex lock;
 	static void getSound(void* userdata, unsigned char* raw_buffer, int bytes) {
-		std::cout << "SOUNDS!\n";
 		short* rb = (short*) raw_buffer;
 		AudioPlayer& ap = ((AudioPlayer*)userdata)[0];
 		long& currSample = ((long*)userdata)[0];
@@ -32,13 +35,15 @@ class AudioPlayer {
 		}
 		int shorts = bytes >> 1;
 		for(int i = 0; i < shorts; i++) {
-			rb[i] = 0;
-			std::cout << currSample << "\n";
-			while(!ap.pq.empty() && ap.pq.top().time == currSample) {
-				std::cout << ":D\n";
-				rb[i] += ap.pq.top().sam;
-				ap.pq.pop();
+			int index = (int)(currSample + i);
+			if(index >= ap.samples.size()) {
+				rb[i] = 0;
+				currSample++;
+				continue;
 			}
+			//std::cout << d << "\n";
+			rb[i] = (short) (ap.samples[index] * 20);
+			std::cout << rb[i] << "\n";
 			currSample++;
 		}
 	}
@@ -57,17 +62,35 @@ class AudioPlayer {
 		target.samples = 2048;
 		target.userdata = this;
 		SDL_AudioSpec targot;
-		ival = SDL_OpenAudio(&target, &targot);
-		
+		ival = SDL_OpenAudio(&target, &targot);	
+	}
+
+	void clear() {
+		samples.clear();
+	}
+
+	void playSound() {
+		sampleID = 0;
 		SDL_PauseAudio(0);
 	}
 
+	void stopSound() {
+		SDL_PauseAudio(1);
+	}
+
 	void addWithDelay(double sam, double delay) {
-		Sample s;
-		s.time = sampleID + (long)(delay * 44100);
-		s.sam = sam;
-		std::cout << "Adding at: " << s.time << "\n";
-		pq.push(s);
+		int index = (int)(delay * 44100);
+		while(index >= samples.size()) {
+			samples.push_back(0);
+		}
+		samples[(index) % ssize] += sam;
+	}
+
+	void dumpAudio(std::ofstream& o) {
+		o << samples.size() << "\n";
+		for(int i = 0; i < samples.size(); i++) {
+			o << (samples[i]) << "\n";
+		}
 	}
 
 	~AudioPlayer() {
