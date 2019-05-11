@@ -23,7 +23,7 @@ option(LIBIGL_WITH_TRIANGLE         "Use Triangle"       OFF)
 option(LIBIGL_WITH_VIEWER           "Use OpenGL viewer"  ON)
 option(LIBIGL_WITH_XML              "Use XML"            OFF)
 
-find_package(LIBIGL REQUIRED QUIET)
+find_package(LIBIGL REQUIRED)
 find_package(SDL2 REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIRS} .)

@@ -241,7 +241,7 @@ bool BirdsHook::simulateOneStep()
         for (int p = 0; p < numRows; ++p){
             body.Vdot.row(p) += params_.timeStep*cForce.segment<3>(3 * counter++) / body.density / body.getTemplate().getVvol()[p];
         }
-	}    
+	}
 	return false;
 }
 
