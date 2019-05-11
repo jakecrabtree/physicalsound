@@ -1,28 +1,51 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <fstream>
 #include <cstdint>
 #include <cmath>
 #include <vector>
 #include <math.h>
 #include <cassert>
+#include <queue>
+#include <mutex>
+
+class Sample {
+	public:
+	long time;
+	double sam;
+	const bool operator< (const Sample& o) const {
+		return o.time < time;
+	}
+};
+
 //Code based off answer 3 from: 
 
 class AudioPlayer {
 	public:
-	int sampleID = 0;
+	long sampleID = 0;
 	double vol = 0;
+	static const int ssize = 44100 * 20;
+	std::vector<double> samples;
+	std::mutex lock;
 	static void getSound(void* userdata, unsigned char* raw_buffer, int bytes) {
 		short* rb = (short*) raw_buffer;
 		AudioPlayer& ap = ((AudioPlayer*)userdata)[0];
-		int& currSample = ((int*)userdata)[0];
+		long& currSample = ((long*)userdata)[0];
 		double v = ap.vol;
 		if(v > 2) {
 			v = 2;
 		}
 		int shorts = bytes >> 1;
 		for(int i = 0; i < shorts; i++) {
-			double time = currSample / 44100.0;
-			rb[i] = (short)(28000 * sin(v * time * 2 * 3.1415 * 441));
+			int index = (int)(currSample + i);
+			if(index >= ap.samples.size()) {
+				rb[i] = 0;
+				currSample++;
+				continue;
+			}
+			//std::cout << d << "\n";
+			rb[i] = (short) (ap.samples[index] * 20);
+			std::cout << rb[i] << "\n";
 			currSample++;
 		}
 	}
@@ -41,11 +64,36 @@ class AudioPlayer {
 		target.samples = 2048;
 		target.userdata = this;
 		SDL_AudioSpec targot;
-		ival = SDL_OpenAudio(&target, &targot);
-		
+		ival = SDL_OpenAudio(&target, &targot);	
+	}
+
+	void clear() {
+		samples.clear();
+	}
+
+	void playSound() {
+		sampleID = 0;
 		SDL_PauseAudio(0);
 	}
 
+	void stopSound() {
+		SDL_PauseAudio(1);
+	}
+
+	void addWithDelay(double sam, double delay) {
+		int index = (int)(delay * 44100);
+		while(index >= samples.size()) {
+			samples.push_back(0);
+		}
+		samples[(index) % ssize] += sam;
+	}
+
+	void dumpAudio(std::ofstream& o) {
+		o << samples.size() << "\n";
+		for(int i = 0; i < samples.size(); i++) {
+			o << (samples[i]) << "\n";
+		}
+	}
 
 	~AudioPlayer() {
 		std::cout << "CLOSING\n";
@@ -88,3 +136,4 @@ class AudioPlayer {
 		}
 	} 
 };
+

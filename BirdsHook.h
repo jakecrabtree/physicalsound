@@ -8,6 +8,8 @@
 #include <set>
 #include "CollisionDetection.h"
 #include <AudioPlayer.h>
+#include <iostream>
+#include <fstream>
 
 class RigidBodyTemplate;
 class RigidBodyInstance;
@@ -19,7 +21,7 @@ public:
 
     virtual void drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu);
 
-    virtual void initSimulation();
+    virtual void initSimulation(int mode);
 
     virtual bool mouseClicked(igl::opengl::glfw::Viewer &viewer, Eigen::Vector3d dir, int button);
 
@@ -44,10 +46,11 @@ private:
     bool launch_;
     Eigen::Vector3d launchPos_;
     Eigen::Vector3d launchDir_;
-
+	
+	int lastTime = -1;
     double time_;
     SimParameters params_;
-    std::string sceneFile_;
+    std::string sceneFile_;	
 
     std::vector<RigidBodyTemplate *> templates_;
     std::vector<RigidBodyInstance *> bodies_;
@@ -57,6 +60,9 @@ private:
     Eigen::MatrixXd renderQ;
     Eigen::MatrixXi renderF;
 	Eigen::MatrixXd renderC;
-
+	
+	std::vector<Eigen::MatrixXd> playbackData;
+	int mode = 0;	
+	std::ofstream ofs;
 	AudioPlayer aud;
 };

@@ -8,7 +8,7 @@
 
 using namespace Eigen;
 
-BirdsHook::BirdsHook() : PhysicsHook(), sceneFile_("box.scn")
+BirdsHook::BirdsHook() : PhysicsHook(), sceneFile_("box")
 {
     birdTemplate_ = NULL;
     launch_ = false;
@@ -104,10 +104,46 @@ void BirdsHook::updateRenderGeometry()
 }
 
 
-void BirdsHook::initSimulation()
+void BirdsHook::initSimulation(int _mode)
 {
+	aud.clear();
+	lastTime = -1;
     time_ = 0;    
+	mode = _mode;
     loadScene();
+	if(mode == 1) {
+		std::string renderfname = std::string("../renders/") + sceneFile_ + std::string(".ren");
+    	std::ifstream ifs(renderfname);
+		if(!ifs) {
+			std::cout << "File does not exist\n";
+			exit(0);
+		}
+		int frames;
+		ifs >> frames;
+		int Vnum;
+		ifs >> Vnum;
+		std::cout << "FRAMES: " << frames << " VNUM " << Vnum << "\n";
+		playbackData.clear();
+		for(int i = 0; i < frames; i++) {
+			Eigen::MatrixXd data(Vnum, 3);
+			for(int v = 0; v < Vnum; v++) {
+				double x, y, z;
+				ifs >> x;
+				ifs >> y;
+				ifs >> z;
+				data.row(v) = Eigen::Vector3d(x, y, z);
+			}
+			playbackData.push_back(data);	
+		}
+		int sampleCount;
+		ifs >> sampleCount;
+		std::cout << "SAMPLECOUNT: " << sampleCount << "\n";
+		aud.samples.clear();
+		for(int i = 0; i < sampleCount; i++) {
+			aud.samples.push_back(0);
+			ifs >> aud.samples[i];
+		}
+	}
     updateRenderGeometry();
 }
 
@@ -198,49 +234,118 @@ bool BirdsHook::mouseClicked(igl::opengl::glfw::Viewer &viewer, Eigen::Vector3d 
 
 bool BirdsHook::simulateOneStep()
 {
-	time_ += params_.timeStep;
-	int nbodies = (int)bodies_.size();
-	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
-		RigidBodyInstance &body = *bodies_[bodyidx];
-		body.V += params_.timeStep * body.Vdot;
-		//TODO get rid of this, setting all lambdas and mus to same slide bar
-		double v = (double) params_.poisson;
-		double E = (double) params_.young;
-		body.lambda = v * E / ((1 + v) * (1 - 2 * v));
-		body.mu = E / (2 * (1 + v));
-	}
-    Eigen::VectorXd cForce;
-    Eigen::VectorXd thetaForce;
-    computeForces(cForce, thetaForce);
+	if(mode == 1) {
+		if(lastTime == -1) {
+			aud.playSound();
+		}
+		int frame = (int)(aud.sampleID * (60.0 / 44100));
+		if(frame != lastTime || frame >= playbackData.size()) {
+			lastTime = frame;
+			if(frame >= playbackData.size()) {
+				frame = playbackData.size() - 1;
+			}
+			int vidx = 0;
+			for(int i = 0; i < bodies_.size(); i++) {
+				for(int v = 0; v < bodies_[i]->V.rows(); v++) {
+					bodies_[i]->V.row(v) = playbackData[frame].row(vidx);
+					vidx++;
+				}
+			}
+		}
+	} else {
+		time_ += params_.timeStep;
+		int curr = time_ * 60;
+		if(curr != lastTime) {
+			std::cout << "WRITING FRAME: " << curr << "\n";
+			lastTime = curr;
+			if(curr == 0) {
+				//TODO store scene name
+				ofs = std::ofstream(std::string("../renders/") + sceneFile_ + std::string(".ren"));
+				ofs << "241\n"; //TODO actually base off time
+				int Vsum = 0;
+				for(int i = 0; i < bodies_.size(); i++) {
+					Vsum += bodies_[i]->V.rows();
+				}
+				ofs << Vsum << "\n";
+			}
+			for(int i = 0; i < bodies_.size(); i++) {
+				for(int v = 0; v < bodies_[i]->V.rows(); v++) {
+					Eigen::Vector3d ve = bodies_[i]->V.row(v);
+					ofs << ve[0] << " " << ve[1] << " " << ve[2] << "\n";
+				}
+			}
+		}
+		if(time_ > 4) {
+			aud.dumpAudio(ofs);
+			ofs.close();
+			exit(0);	
+		}
+		int nbodies = (int)bodies_.size();
+		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+			RigidBodyInstance &body = *bodies_[bodyidx];
+			body.V += params_.timeStep * body.Vdot;
+			//TODO get rid of this, setting all lambdas and mus to same slide bar
+			double v = (double) params_.poisson;
+			double E = (double) params_.young;
+			body.lambda = v * E / ((1 + v) * (1 - 2 * v));
+			body.mu = E / (2 * (1 + v));
+		}
+    	Eigen::VectorXd cForce;
+    	Eigen::VectorXd thetaForce;
+    	computeForces(cForce, thetaForce);
 	
-	//Collision stuff
-	std::set<Collision> collisions;
-	collisionDetection(bodies_, collisions);
-	std::vector<int> pre;
-	pre.push_back(0);
-	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
-		pre.push_back(pre[bodyidx] + bodies_[bodyidx]->getTemplate().getVerts().rows());
-	}
-	for(const Collision& collision: collisions) {
-		if(collision.body2 == -1) {
-			int vidx = collision.collidingVertex;
-			double vy = bodies_[collision.body1]->V(vidx, 1);
-			double dist = vy + 1;
-			cForce[3 * pre[collision.body1] + 3 * vidx + 1] += -1 * params_.penaltyStiffness * dist;
-		} else {
-			int vidx = collision.collidingVertex;
-			double dist = bodies_[collision.body2]->distance(bodies_[collision.body1]->V.row(vidx).transpose(), collision.collidingTet);
-			cForce.segment<3>(3 * pre[collision.body1] + 3 * vidx) += -1.0 * params_.penaltyStiffness * dist * bodies_[collision.body2]->Ddistance(collision.collidingTet).transpose();
-		} 
-	}
-	aud.vol = .01 * collisions.size();
-    int counter = 0;
-    for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
-		RigidBodyInstance &body = *bodies_[bodyidx];
-        int numRows = body.getTemplate().getVerts().rows();
-        for (int p = 0; p < numRows; ++p){
-            body.Vdot.row(p) += params_.timeStep*cForce.segment<3>(3 * counter++) / body.density / body.getTemplate().getVvol()[p];
-        }
+		//Collision stuff
+		std::set<Collision> collisions;
+		collisionDetection(bodies_, collisions);
+		std::vector<int> pre;
+		pre.push_back(0);
+		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+			pre.push_back(pre[bodyidx] + bodies_[bodyidx]->getTemplate().getVerts().rows());
+		}
+		for(const Collision& collision: collisions) {
+			if(collision.body2 == -1) {
+				int vidx = collision.collidingVertex;
+				double vy = bodies_[collision.body1]->V(vidx, 1);
+				double dist = vy + 1;
+				cForce[3 * pre[collision.body1] + 3 * vidx + 1] += -1 * params_.penaltyStiffness * dist;
+			} else {
+				int vidx = collision.collidingVertex;
+				double dist = bodies_[collision.body2]->distance(bodies_[collision.body1]->V.row(vidx).transpose(), collision.collidingTet);
+				cForce.segment<3>(3 * pre[collision.body1] + 3 * vidx) += -1.0 * params_.penaltyStiffness * dist * bodies_[collision.body2]->Ddistance(collision.collidingTet).transpose();
+			} 
+		}
+    	int counter = 0;
+    	for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+			RigidBodyInstance &body = *bodies_[bodyidx];
+        	int numRows = body.getTemplate().getVerts().rows();
+        	for (int p = 0; p < numRows; ++p){
+            	body.Vdot.row(p) += params_.timeStep*cForce.segment<3>(3 * counter++) / body.density / body.getTemplate().getVvol()[p];
+        	}
+		}
+
+		//Sound Stuff
+		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
+			RigidBodyInstance &body = *bodies_[bodyidx];
+			Eigen::VectorXd p;
+			body.computeFacePressures(p);
+			int numF = body.getTemplate().getFaces().rows();
+			for(int i = 0; i < numF; i++) {
+				double pr = p[i];
+				double delta = 1;
+				Eigen::Vector3d v0 = body.V.row(body.getTemplate().getFaces()(i, 0));
+				Eigen::Vector3d v1 = body.V.row(body.getTemplate().getFaces()(i, 1));
+				Eigen::Vector3d v2 = body.V.row(body.getTemplate().getFaces()(i, 2));
+				Eigen::Vector3d cro = ((v1 - v0).cross(v2 - v0));
+				double area = cro.norm() / 2;
+				cro.normalize();
+				Eigen::Vector3d xbar = (1 / 3.0) * (v0 + v1 + v2);
+				Eigen::Vector3d camera = Eigen::Vector3d(4, 4, 4); //TODO find actual camera position
+				Eigen::Vector3d camdif = camera - xbar;
+				double co = camdif.dot(cro) / (camdif.norm());
+				double signal = pr * area * delta * co / (camdif.norm());
+				aud.addWithDelay(signal, time_ + camdif.norm() / 343);
+			}
+		}
 	}
 	return false;
 }
@@ -319,9 +424,8 @@ void BirdsHook::loadScene()
         delete rbt;
     bodies_.clear();
     templates_.clear();
-
     std::string prefix;
-    std::string scenefname = std::string("scenes/") + sceneFile_;
+    std::string scenefname = std::string("scenes/") + sceneFile_ + std::string(".scn");
     std::ifstream ifs(scenefname);
     if (!ifs)
     {
@@ -333,7 +437,6 @@ void BirdsHook::loadScene()
             return;
     }
         
-
     int nbodies;
     ifs >> nbodies;
     for (int body = 0; body < nbodies; body++)
@@ -359,7 +462,6 @@ void BirdsHook::loadScene()
         templates_.push_back(rbt);
         bodies_.push_back(rbi);
     }
-
     // bird mesh    
     std::string birdname = prefix + std::string("meshes/bird2.obj");
     delete birdTemplate_;

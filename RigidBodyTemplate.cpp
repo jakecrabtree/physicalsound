@@ -20,7 +20,7 @@ RigidBodyTemplate::RigidBodyTemplate(const std::string &meshFilename, double sca
 
     mV *= scale;
 	
-    igl::copyleft::tetgen::tetrahedralize(mV, mF, "pq10.414a0.21", V, T, F);
+    igl::copyleft::tetgen::tetrahedralize(mV, mF, "pq1.414a0.21", V, T, F);
     /*V.resize(4, 3);
 	V.row(0) = Eigen::Vector3d(0, 0, 0);
 	V.row(1) = Eigen::Vector3d(1, 0, 0);
