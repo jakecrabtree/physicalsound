@@ -38,6 +38,10 @@ public:
 		viewer.data().set_colors(renderC);
     }
 
+    void setCamera(Eigen::Vector3f* cameraPos){
+        cam = cameraPos;
+    }
+
 private:
     void loadScene();
     void computeForces(Eigen::VectorXd &Fc, Eigen::VectorXd &Ftheta);    
@@ -65,4 +69,5 @@ private:
 	int mode = 0;	
 	std::ofstream ofs;
 	AudioPlayer aud;
+    Eigen::Vector3f* cam;
 };

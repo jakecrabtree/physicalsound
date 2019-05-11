@@ -244,6 +244,8 @@ void RigidBodyInstance::computeFacePressures(Eigen::VectorXd& pressures){
 		Vector3d vel = (Vdot.row(i0) + Vdot.row(i1) + Vdot.row(i2))/3.0;
 		double pressure = acousticImpedance * vel.dot(norm);
 		pressures[i] = pressure;
-	}
+	}	
 }
+
+
 

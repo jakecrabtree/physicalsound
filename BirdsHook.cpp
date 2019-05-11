@@ -143,6 +143,7 @@ void BirdsHook::initSimulation(int _mode)
 			aud.samples.push_back(0);
 			ifs >> aud.samples[i];
 		}
+        aud.filterAudio(params_.timeStep);
 	}
     updateRenderGeometry();
 }
@@ -277,11 +278,12 @@ bool BirdsHook::simulateOneStep()
 			}
 			if(curr >= maxFrame - 1) {
 				std::cout << "Successfully wrote to render file\n";	
+                aud.filterAudio(params_.timeStep);
 				aud.dumpAudio(ofs);
 				ofs.close();
 				exit(0);	
 			}
-		}
+        }
 		int nbodies = (int)bodies_.size();
 		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
 			RigidBodyInstance &body = *bodies_[bodyidx];
@@ -336,8 +338,10 @@ bool BirdsHook::simulateOneStep()
 				double area = cro.norm() / 2;
 				cro.normalize();
 				Eigen::Vector3d xbar = (1 / 3.0) * (v0 + v1 + v2);
-				Eigen::Vector3d camera = Eigen::Vector3d(4, 4, 4); //TODO find actual camera position
-				Eigen::Vector3d camdif = camera - xbar;
+                Eigen::Vector3d camdif;
+                for (int dim = 0; dim < 3; ++dim){
+                    camdif[dim] = (double)((*cam)[dim]) - xbar[dim];
+                }
 				double co = camdif.dot(cro) / (camdif.norm());
 				int fid;
 				//Eigen::Matrix4f fakeP = __viewer->core.proj;
