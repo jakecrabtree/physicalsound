@@ -2,24 +2,43 @@
 #include <iostream>
 #include <cstdint>
 #include <cmath>
+#include <queue>
+#include <vector>
+
+class Sample {
+	public:
+	long time;
+	double sam;
+	const bool operator< (const Sample& o) const {
+		return o.time < time;
+	}
+};
+
 //Code based off answer 3 from: 
 
 class AudioPlayer {
 	public:
-	int sampleID = 0;
+	long sampleID = 0;
 	double vol = 0;
+	std::priority_queue<Sample, std::vector<Sample>> pq;
 	static void getSound(void* userdata, unsigned char* raw_buffer, int bytes) {
+		std::cout << "SOUNDS!\n";
 		short* rb = (short*) raw_buffer;
 		AudioPlayer& ap = ((AudioPlayer*)userdata)[0];
-		int& currSample = ((int*)userdata)[0];
+		long& currSample = ((long*)userdata)[0];
 		double v = ap.vol;
 		if(v > 2) {
 			v = 2;
 		}
 		int shorts = bytes >> 1;
 		for(int i = 0; i < shorts; i++) {
-			double time = currSample / 44100.0;
-			rb[i] = (short)(28000 * sin(v * time * 2 * 3.1415 * 441));
+			rb[i] = 0;
+			std::cout << currSample << "\n";
+			while(!ap.pq.empty() && ap.pq.top().time == currSample) {
+				std::cout << ":D\n";
+				rb[i] += ap.pq.top().sam;
+				ap.pq.pop();
+			}
 			currSample++;
 		}
 	}
@@ -43,6 +62,13 @@ class AudioPlayer {
 		SDL_PauseAudio(0);
 	}
 
+	void addWithDelay(double sam, double delay) {
+		Sample s;
+		s.time = sampleID + (long)(delay * 44100);
+		s.sam = sam;
+		std::cout << "Adding at: " << s.time << "\n";
+		pq.push(s);
+	}
 
 	~AudioPlayer() {
 		std::cout << "CLOSING\n";
@@ -50,3 +76,4 @@ class AudioPlayer {
 		SDL_CloseAudio();
 	}
 };
+

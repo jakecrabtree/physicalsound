@@ -232,8 +232,8 @@ bool BirdsHook::simulateOneStep()
 			double dist = bodies_[collision.body2]->distance(bodies_[collision.body1]->V.row(vidx).transpose(), collision.collidingTet);
 			cForce.segment<3>(3 * pre[collision.body1] + 3 * vidx) += -1.0 * params_.penaltyStiffness * dist * bodies_[collision.body2]->Ddistance(collision.collidingTet).transpose();
 		} 
+		aud.addWithDelay(100, 1);
 	}
-	aud.vol = .01 * collisions.size();
     int counter = 0;
     for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
 		RigidBodyInstance &body = *bodies_[bodyidx];
