@@ -154,7 +154,7 @@ void BirdsHook::tick()
 
     double launchVel = 100.0;
 
-    if (launch_)
+    /*if (launch_)
     {
         Eigen::Vector3d cvel(0, 0, 0);
         Eigen::Vector3d w(0, 0, 0);
@@ -162,7 +162,7 @@ void BirdsHook::tick()
         bodies_.push_back(rbi);
     
         launch_ = false;
-    }
+    }*/
 
     launchMutex_.unlock();
 }
@@ -288,11 +288,6 @@ bool BirdsHook::simulateOneStep()
 		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
 			RigidBodyInstance &body = *bodies_[bodyidx];
 			body.V += params_.timeStep * body.Vdot;
-			//TODO get rid of this, setting all lambdas and mus to same slide bar
-			double v = (double) params_.poisson;
-			double E = (double) params_.young;
-			body.lambda = v * E / ((1 + v) * (1 - 2 * v));
-			body.mu = E / (2 * (1 + v));
 		}
     	Eigen::VectorXd cForce;
     	Eigen::VectorXd thetaForce;
@@ -348,6 +343,13 @@ bool BirdsHook::simulateOneStep()
                     camdif[dim] = (double)((*cam)[dim]) - xbar[dim];
                 }
 				double co = camdif.dot(cro) / (camdif.norm());
+				int fid;
+				//Eigen::Matrix4f fakeP = __viewer->core.proj;
+				//Eigen::Matrix4f fakeV = __viewer->core.view;
+				//std::cout << "PROJ: " <<  fakeP.rows() << " " << fakeP.cols() << "\n";
+				//std::cout << "VIEW: " << fakeV.rows() << " " << fakeV.cols() << "\n";
+				//Eigen::Vector4f pdata = fakeP * fakeV * Eigen::Vector4f(0, 0, 0, 0);	
+				//std::cout << pdata[0] << "\n";	
 				double signal = pr * area * delta * co / (camdif.norm());
 				aud.addWithDelay(signal, time_ + camdif.norm() / 343);
 			}
@@ -450,6 +452,11 @@ void BirdsHook::loadScene()
         std::string meshname;
         ifs >> meshname;
         meshname = prefix + std::string("meshes/") + meshname;
+		double young, poisson, phi, psi;
+		ifs >> young;
+		ifs >> poisson;
+		ifs >> phi;
+		ifs >> psi;
         double scale;
         ifs >> scale;
         RigidBodyTemplate *rbt = new RigidBodyTemplate(meshname, scale);
@@ -464,7 +471,7 @@ void BirdsHook::loadScene()
             ifs >> cvel[i];
         for (int i = 0; i < 3; i++)
             ifs >> w[i];
-        RigidBodyInstance *rbi = new RigidBodyInstance(*rbt, c, theta, cvel, w, rho);
+        RigidBodyInstance *rbi = new RigidBodyInstance(*rbt, c, theta, cvel, w, rho, young, poisson, phi, psi);
         templates_.push_back(rbt);
         bodies_.push_back(rbi);
     }

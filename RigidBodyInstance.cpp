@@ -11,9 +11,14 @@ using namespace std;
 RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
     const Eigen::Vector3d &c, const Eigen::Vector3d &theta,
     const Eigen::Vector3d &cvel, const Eigen::Vector3d &w,
-    double density)
-    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate)//, facePressures(std::ceil(6.0/(22050.0*timeStep)))
+    double density, double young, double poisson, double phi, double psi)
+    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate), phi(phi), psi(psi)
 {
+	
+	double v = (double) poisson;
+	double E = (double) young;
+	lambda = v * E / ((1 + v) * (1 - 2 * v));
+	mu = E / (2 * (1 + v));
 	V = getTemplate().getVerts();
 	for(int i = 0; i < V.rows(); i++) {
 		V.row(i) = (c + VectorMath::rotationMatrix(theta)* V.row(i).transpose()).transpose();

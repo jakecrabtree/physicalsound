@@ -11,7 +11,7 @@ struct AABBNode;
 class RigidBodyInstance
 {
 public:
-    RigidBodyInstance(const RigidBodyTemplate &rbtemplate, const Eigen::Vector3d &c, const Eigen::Vector3d &theta, const Eigen::Vector3d &cvel, const Eigen::Vector3d &w, double density);//, double timeStep);
+    RigidBodyInstance(const RigidBodyTemplate &rbtemplate, const Eigen::Vector3d &c, const Eigen::Vector3d &theta, const Eigen::Vector3d &cvel, const Eigen::Vector3d &w, double density, double young, double mu, double phi, double psi);
     ~RigidBodyInstance();
 
     Eigen::Vector3d c;
@@ -28,10 +28,10 @@ public:
     AABBNode *AABB;
     
     const RigidBodyTemplate &getTemplate() const {return rbtemplate_;}
-    double lambda = 100 * 161.65;
-    double mu = 100 * 80.827;
-    double phi = .2;
-    double psi = .2;
+    double lambda;
+    double mu;
+    double phi;
+    double psi;
 
     double acousticImpedance = 415;
 
