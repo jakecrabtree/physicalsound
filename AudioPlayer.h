@@ -126,6 +126,26 @@ class AudioPlayer {
 		return filter;
 	}
 
+	static std::vector<double> lowPassFilter2(double timeStep, int halfWidth, double maxFreq){
+		std::vector<double> filter(2*halfWidth + 1, 0); 
+		for (int i = -1*halfWidth; i <= halfWidth; ++i){
+			if (i != 0){
+				double val = i * timeStep;
+				double sinc = std::sin(2 * M_PI * maxFreq * val) / (M_PI * val);
+				double u = (double)(i) / halfWidth;
+				double win = 0;
+				if (!(std::abs(u) > 1)){
+					win = 0.5 + std::cos(M_PI*u)/2.0;
+				}
+				filter[i] = sinc * win;
+			} else{
+				filter[i] = 0;
+			}
+
+		} 
+		return filter;
+	}
+
 	static std::vector<double> gaussianFilter(int standardDev = 2){
 		std::vector<double> filter(2*standardDev + 1); 
 		for (int i = -1*standardDev; i <= standardDev; ++i){
@@ -148,6 +168,7 @@ class AudioPlayer {
 
 	static void dcBlockingFilter(const std::vector<double>& samples, std::vector<double>& filteredSamples, double lossConstant){
 		filteredSamples.resize(samples.size());
+		filteredSamples[0] = samples[0]; 
 		for (int i = 1; i < samples.size(); ++i){
 			filteredSamples[i] = (1.0 - lossConstant) * filteredSamples[i-1] + samples[i] - samples[i-1];
 		}
@@ -155,11 +176,10 @@ class AudioPlayer {
 
 	void filterAudio(double timeStep){
 		convolutionFilter(samples, lowPassFilter(22050, 44010, std::ceil(6.0/(22050.0*timeStep))), filteredSamples);
-		//dcBlockingFilter(samples, filteredSamples, 0.1);
-		//convolutionFilter(filteredSamples, gaussianFilter(), samples);
-
-		convolutionFilter(samples, gaussianFilter(), filteredSamples);
-		samples = filteredSamples;
+		//convolutionFilter(samples, lowPassFilter2(timeStep, std::ceil(3.0/(22050.0*timeStep)), 22050), filteredSamples);
+		std::vector<double> blockedSamples;
+		dcBlockingFilter(filteredSamples, blockedSamples, 0.1);
+		convolutionFilter(blockedSamples, gaussianFilter(), samples);
 	}
 };
 
