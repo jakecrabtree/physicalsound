@@ -19,7 +19,7 @@ class Sample {
 	}
 };
 
-//Code based off answer 3 from: 
+//Code based off answer 3 from: https://stackoverflow.com/questions/10110905/simple-sound-wave-generator-with-sdl-in-c
 
 class AudioPlayer {
 	public:
@@ -67,7 +67,15 @@ class AudioPlayer {
 		target.samples = 2048;
 		target.userdata = this;
 		SDL_AudioSpec targot;
-		ival = SDL_OpenAudio(&target, &targot);	
+		ival = SDL_OpenAudio(&target, &targot);
+		if(ival != 0) {
+			std::cout << "Audio could not be opened: " << ival << "\n";
+			exit(0);
+		}
+		if(target.format != targot.format) {
+			std::cout << "Format did not match\n";
+			exit(0);
+		}
 	}
 
 	void clear() {
