@@ -223,3 +223,22 @@ Vector3d RigidBodyInstance::Ddistance(int tet) const
     Vector3d ret = (result.transpose() * linTrans.inverse());//.transpose(); //todo hmmmmmmm
     return ret;
 }
+
+void RigidBodyInstance::computeFacePressures(Eigen::VectorXd& pressures){
+	pressures.setZero();
+	pressures.resize(getTemplate().getFaces().size());
+	for (int i = 0; i < pressures.size(); ++i){
+		int i0 = getTemplate().getFaces()(i, 0);
+		int i1 = getTemplate().getFaces()(i, 1);
+		int i2 = getTemplate().getFaces()(i, 2);
+		Vector3d p0 = V.row(i0);
+		Vector3d p1 = V.row(i1);
+		Vector3d p2 = V.row(i2);
+		Vector3d norm = ((p1-p0).cross(p2-p0)).normalized();
+
+		Vector3d vel = (Vdot.row(i0) + Vdot.row(i1) + Vdot.row(i2))/3.0;
+		double pressure = acousticImpedance * vel.dot(norm);
+		pressures[i] = pressure;
+	}
+}
+

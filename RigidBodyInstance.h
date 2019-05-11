@@ -33,11 +33,14 @@ public:
     double phi = .2;
     double psi = .2;
 
+    double acousticImpedance = 415;
+
     Eigen::Vector3d elasticForce(int tet, int i);
 
     double distance(Eigen::Vector3d p, int tet) const;
     Eigen::Vector3d Ddistance(int tet) const;
 	Eigen::Matrix3d cuteLilFunction(int tet) const;	
+    void computeFacePressures(Eigen::VectorXd& pressures);
     
 private:
     const RigidBodyTemplate &rbtemplate_;
