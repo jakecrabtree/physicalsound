@@ -149,7 +149,12 @@ class AudioPlayer {
 	static std::vector<double> gaussianFilter(int standardDev = 2){
 		std::vector<double> filter(2*standardDev + 1); 
 		for (int i = -1*standardDev; i <= standardDev; ++i){
-			filter[i] = (1.0 / (std::sqrt(2.0*M_PI) * standardDev) ) * std::exp( (-1.0 * i * i) / (2.0 * standardDev * standardDev) );
+			if (i != 0){
+				filter[standardDev + i] = (1.0 / (std::sqrt(2.0*M_PI) * standardDev) ) * std::exp( (-1.0 * i * i) / (2.0 * standardDev * standardDev) );
+			}
+			else {
+				filter[0] = (1.0 / (std::sqrt(2.0*M_PI) * standardDev) );
+			}
 		} 
 		return filter;
 	}
