@@ -278,7 +278,6 @@ bool BirdsHook::simulateOneStep()
 			}
 			if(curr >= maxFrame - 1) {
 				std::cout << "Successfully wrote to render file\n";	
-                aud.filterAudio(params_.timeStep);
 				aud.dumpAudio(ofs);
 				ofs.close();
 				exit(0);	

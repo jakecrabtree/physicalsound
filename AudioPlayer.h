@@ -178,7 +178,7 @@ class AudioPlayer {
 		convolutionFilter(samples, lowPassFilter(22050, 44010, std::ceil(6.0/(22050.0*timeStep))), filteredSamples);
 		//convolutionFilter(samples, lowPassFilter2(timeStep, std::ceil(3.0/(22050.0*timeStep)), 22050), filteredSamples);
 		std::vector<double> blockedSamples;
-		dcBlockingFilter(filteredSamples, blockedSamples, 0.1);
+		dcBlockingFilter(filteredSamples, blockedSamples, 0.5);
 		convolutionFilter(blockedSamples, gaussianFilter(), samples);
 	}
 };
