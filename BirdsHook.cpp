@@ -255,13 +255,14 @@ bool BirdsHook::simulateOneStep()
 	} else {
 		time_ += params_.timeStep;
 		int curr = time_ * 60;
+		int maxFrame = 241;
 		if(curr != lastTime) {
 			std::cout << "WRITING FRAME: " << curr << "\n";
 			lastTime = curr;
 			if(curr == 0) {
 				//TODO store scene name
 				ofs = std::ofstream(std::string("../renders/") + sceneFile_ + std::string(".ren"));
-				ofs << "241\n"; //TODO actually base off time
+				ofs << maxFrame << "\n";
 				int Vsum = 0;
 				for(int i = 0; i < bodies_.size(); i++) {
 					Vsum += bodies_[i]->V.rows();
@@ -274,11 +275,12 @@ bool BirdsHook::simulateOneStep()
 					ofs << ve[0] << " " << ve[1] << " " << ve[2] << "\n";
 				}
 			}
-		}
-		if(time_ > 4) {
-			aud.dumpAudio(ofs);
-			ofs.close();
-			exit(0);	
+			if(curr >= maxFrame - 1) {
+				std::cout << "Successfully wrote to render file\n";	
+				aud.dumpAudio(ofs);
+				ofs.close();
+				exit(0);	
+			}
 		}
 		int nbodies = (int)bodies_.size();
 		for(int bodyidx = 0; bodyidx < nbodies; bodyidx++) {
