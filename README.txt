@@ -30,4 +30,4 @@ How Scene Files Work:
 4 Parameters were added per mesh, so after mesh name there is now the Young's Modulus, Poisson Ratio, Phi, Psi (and then it goes on to scale and density, position, ...).
 
 Render Files:
-We provide sample render files, a metalbox.ren and a metalspheres.ren
+We provide a sample render file: metalbox (Volume Multiplier should be about 500, may need to raise it if you can't hear it)

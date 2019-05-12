@@ -44,7 +44,6 @@ class AudioPlayer {
 			}
 			//std::cout << d << "\n";
 			rb[i] = (short) (ap.samples[index] * v);
-			std::cout << rb[i] << "\n";
 			currSample++;
 		}
 
