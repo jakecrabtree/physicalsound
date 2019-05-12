@@ -35,15 +35,18 @@ void BirdsHook::drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
         ImGui::Checkbox("Impulses Enabled", &params_.impulsesEnabled);
         ImGui::InputFloat("CoR", &params_.CoR, 0, 0, 3);
     } 
-	if (ImGui::CollapsingHeader("Soft Body", ImGuiTreeNodeFlags_DefaultOpen))
+	/*if (ImGui::CollapsingHeader("Soft Body", ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		ImGui::InputFloat("Young's Modulus", &params_.young, 0, 0, 6);
 		ImGui::InputFloat("Poisson Ratio", &params_.poisson, 0, 0, 6);
-	} 
+	} */
 }
 
 void BirdsHook::updateRenderGeometry()
 {
+	if(mode == 1) {
+		return;
+	}
     int totverts = 0;
     int totfaces = 0;
 
@@ -135,6 +138,7 @@ void BirdsHook::initSimulation(int _mode)
 			}
 			playbackData.push_back(data);	
 		}
+		renderQ = playbackData[0];
 		int sampleCount;
 		ifs >> sampleCount;
 		std::cout << "SAMPLECOUNT: " << sampleCount << "\n";
@@ -144,6 +148,7 @@ void BirdsHook::initSimulation(int _mode)
 			ifs >> aud.samples[i];
 		}
         aud.filterAudio(params_.timeStep);
+		ifs.clear();
 	}
     updateRenderGeometry();
 }
@@ -245,13 +250,14 @@ bool BirdsHook::simulateOneStep()
 			if(frame >= playbackData.size()) {
 				frame = playbackData.size() - 1;
 			}
-			int vidx = 0;
+			/*int vidx = 0;
 			for(int i = 0; i < bodies_.size(); i++) {
 				for(int v = 0; v < bodies_[i]->V.rows(); v++) {
 					bodies_[i]->V.row(v) = playbackData[frame].row(vidx);
 					vidx++;
 				}
-			}
+			}*/
+			renderQ = playbackData[frame];
 		}
 	} else {
 		time_ += params_.timeStep;
@@ -262,24 +268,33 @@ bool BirdsHook::simulateOneStep()
 			lastTime = curr;
 			if(curr == 0) {
 				//TODO store scene name
+				std::ofstream ffs = std::ofstream(std::string("../renders/") + sceneFile_ + std::string(".fac"));
+				ffs << renderF.rows() << "\n";
+				for(int i = 0; i < renderF.rows(); i++) {
+					ffs << renderF(i, 0) << " " << renderF(i, 1) << " " << renderF(i, 2) << "\n";
+				}
+				for(int i = 0; i < renderF.rows(); i++) {
+					ffs << renderC(i, 0) << " " << renderC(i, 1) << " " << renderC(i, 2) << "\n";
+				}
 				ofs = std::ofstream(std::string("../renders/") + sceneFile_ + std::string(".ren"));
 				ofs << maxFrame << "\n";
-				int Vsum = 0;
+				/*int Vsum = 0;
 				for(int i = 0; i < bodies_.size(); i++) {
 					Vsum += bodies_[i]->V.rows();
 				}
-				ofs << Vsum << "\n";
+				ofs << Vsum << "\n";*/
+				ofs << renderQ.rows() << "\n";
 			}
-			for(int i = 0; i < bodies_.size(); i++) {
-				for(int v = 0; v < bodies_[i]->V.rows(); v++) {
-					Eigen::Vector3d ve = bodies_[i]->V.row(v);
+			
+			for(int i = 0; i < renderQ.rows(); i++) {
+					Eigen::Vector3d ve = renderQ.row(i);
 					ofs << ve[0] << " " << ve[1] << " " << ve[2] << "\n";
-				}
 			}
 			if(curr >= maxFrame - 1) {
-				std::cout << "Successfully wrote to render file\n";	
+				std::cout << "Outputting Data\n";
 				aud.dumpAudio(ofs);
 				ofs.close();
+				std::cout << "Successfully wrote to render file\n";	
 				exit(0);	
 			}
         }
@@ -327,6 +342,12 @@ bool BirdsHook::simulateOneStep()
 			Eigen::VectorXd p;
 			body.computeFacePressures(p);
 			int numF = body.getTemplate().getFaces().rows();
+			if(body.faceDelays.size() == 0) {
+				for(int i = 0; i < numF; i++) {
+					body.faceDelays.push_back(std::vector<double>());
+					body.facePressures.push_back(std::vector<double>());
+				}
+			}
 			for(int i = 0; i < numF; i++) {
 				double pr = p[i];
 				double delta = 1;
@@ -350,7 +371,9 @@ bool BirdsHook::simulateOneStep()
 				//Eigen::Vector4f pdata = fakeP * fakeV * Eigen::Vector4f(0, 0, 0, 0);	
 				//std::cout << pdata[0] << "\n";	
 				double signal = pr * area * delta * co / (camdif.norm());
-				aud.addWithDelay(signal, time_ + camdif.norm() / 343);
+				body.facePressures[i].push_back(signal);
+				body.faceDelays[i].push_back(time_ + camdif.norm() / 343);
+				//aud.addWithDelay(signal, time_ + camdif.norm() / 343);
 			}
 		}
 	}
@@ -443,37 +466,65 @@ void BirdsHook::loadScene()
         if(!ifs)
             return;
     }
-        
+    
+	std::cout << "Mode: " << mode << "\n"; 
     int nbodies;
     ifs >> nbodies;
+	if(mode == 0) {
     for (int body = 0; body < nbodies; body++)
     {
-        std::string meshname;
-        ifs >> meshname;
-        meshname = prefix + std::string("meshes/") + meshname;
-		double young, poisson, phi, psi;
-		ifs >> young;
-		ifs >> poisson;
-		ifs >> phi;
-		ifs >> psi;
-        double scale;
-        ifs >> scale;
-        RigidBodyTemplate *rbt = new RigidBodyTemplate(meshname, scale);
-        double rho;
-        ifs >> rho;
-        Eigen::Vector3d c, theta, cvel, w;
-        for (int i = 0; i < 3; i++)
-            ifs >> c[i];
-        for (int i = 0; i < 3; i++)
-            ifs >> theta[i];
-        for (int i = 0; i < 3; i++)
-            ifs >> cvel[i];
-        for (int i = 0; i < 3; i++)
-            ifs >> w[i];
-        RigidBodyInstance *rbi = new RigidBodyInstance(*rbt, c, theta, cvel, w, rho, young, poisson, phi, psi);
-        templates_.push_back(rbt);
-        bodies_.push_back(rbi);
+        	std::string meshname;
+        	ifs >> meshname;
+        	meshname = prefix + std::string("meshes/") + meshname;
+			double young, poisson, phi, psi;
+			ifs >> young;
+			ifs >> poisson;
+			ifs >> phi;
+			ifs >> psi;
+        	double scale;
+        	ifs >> scale;
+        	RigidBodyTemplate *rbt = new RigidBodyTemplate(meshname, scale);
+        	double rho;
+        	ifs >> rho;
+        	Eigen::Vector3d c, theta, cvel, w;
+        	for (int i = 0; i < 3; i++)
+            	ifs >> c[i];
+        	for (int i = 0; i < 3; i++)
+            	ifs >> theta[i];
+        	for (int i = 0; i < 3; i++)
+            	ifs >> cvel[i];
+        	for (int i = 0; i < 3; i++)
+            	ifs >> w[i];
+        	RigidBodyInstance *rbi = new RigidBodyInstance(*rbt, c, theta, cvel, w, rho, young, poisson, phi, psi);
+        	templates_.push_back(rbt);
+        	bodies_.push_back(rbi);
     }
+	} else {
+		std::string facedata = prefix + std::string("renders/") + sceneFile_ + std::string(".fac");
+    	std::ifstream facefile(facedata);
+		if(!facefile) {
+			std::cout << "FACE FILE COULD NOT BE FOUND\n";
+			exit(0);
+		}
+		int fcount;
+		facefile >> fcount;
+		renderF.resize(fcount, 3);
+		for(int i = 0; i < fcount; i++) {
+			int a, b, c;
+			facefile >> a;
+			facefile >> b;
+			facefile >> c;
+			renderF.row(i) = Eigen::Vector3i(a, b, c);
+		}
+		renderC.resize(fcount, 3);
+		for(int i = 0; i < fcount; i++) {
+			double a, b, c;
+			facefile >> a;
+			facefile >> b;
+			facefile >> c;
+			renderC.row(i) = Eigen::Vector3d(a, b, c);
+		}
+	}
     // bird mesh    
     std::string birdname = prefix + std::string("meshes/bird2.obj");
     delete birdTemplate_;

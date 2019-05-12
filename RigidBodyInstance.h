@@ -41,8 +41,9 @@ public:
     Eigen::Vector3d Ddistance(int tet) const;
 	Eigen::Matrix3d cuteLilFunction(int tet) const;	
     void computeFacePressures(Eigen::VectorXd& pressures);
-
-    std::vector<Eigen::VectorXd> facePressures;
+	
+	std::vector<std::vector<double>> faceDelays;
+    std::vector<std::vector<double>> facePressures;
     std::vector<double> facePressureDelays;
     int currFacePressure = 0;
 
