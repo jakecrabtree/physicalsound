@@ -44,6 +44,7 @@ public:
 	
 	std::vector<std::vector<double>> faceDelays;
     std::vector<std::vector<double>> facePressures;
+	std::vector<std::vector<double>> faceConstants;
     std::vector<double> facePressureDelays;
     int currFacePressure = 0;
 

@@ -17,6 +17,7 @@ struct SimParameters
         CoR = 0.5;
 		young = 165;
 		poisson = .33;
+		maxFrame = 240;
     }
 
     float timeStep;
@@ -31,6 +32,7 @@ struct SimParameters
     float CoR;
 	float young;
 	float poisson;
+	int maxFrame;
 };
 
 #endif

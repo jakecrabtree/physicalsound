@@ -35,11 +35,11 @@ void BirdsHook::drawGUI(igl::opengl::glfw::imgui::ImGuiMenu &menu)
         ImGui::Checkbox("Impulses Enabled", &params_.impulsesEnabled);
         ImGui::InputFloat("CoR", &params_.CoR, 0, 0, 3);
     } 
-	/*if (ImGui::CollapsingHeader("Soft Body", ImGuiTreeNodeFlags_DefaultOpen))
+	if (ImGui::CollapsingHeader("Rendering and Playback", ImGuiTreeNodeFlags_DefaultOpen))
 	{
-		ImGui::InputFloat("Young's Modulus", &params_.young, 0, 0, 6);
-		ImGui::InputFloat("Poisson Ratio", &params_.poisson, 0, 0, 6);
-	} */
+		ImGui::InputInt("Frames to Render", &params_.maxFrame);
+		ImGui::InputFloat("Volume Multiplier", &aud.vol, 0, 0, 6);
+	} 
 }
 
 void BirdsHook::updateRenderGeometry()
@@ -147,7 +147,7 @@ void BirdsHook::initSimulation(int _mode)
 			aud.samples.push_back(0);
 			ifs >> aud.samples[i];
 		}
-        aud.filterAudio(params_.timeStep);
+        //aud.filterAudio(params_.timeStep);
 		ifs.clear();
 	}
     updateRenderGeometry();
@@ -262,7 +262,6 @@ bool BirdsHook::simulateOneStep()
 	} else {
 		time_ += params_.timeStep;
 		int curr = time_ * 60;
-		int maxFrame = 241;
 		if(curr != lastTime) {
 			std::cout << "WRITING FRAME: " << curr << "\n";
 			lastTime = curr;
@@ -277,7 +276,7 @@ bool BirdsHook::simulateOneStep()
 					ffs << renderC(i, 0) << " " << renderC(i, 1) << " " << renderC(i, 2) << "\n";
 				}
 				ofs = std::ofstream(std::string("../renders/") + sceneFile_ + std::string(".ren"));
-				ofs << maxFrame << "\n";
+				ofs << params_.maxFrame << "\n";
 				/*int Vsum = 0;
 				for(int i = 0; i < bodies_.size(); i++) {
 					Vsum += bodies_[i]->V.rows();
@@ -290,9 +289,22 @@ bool BirdsHook::simulateOneStep()
 					Eigen::Vector3d ve = renderQ.row(i);
 					ofs << ve[0] << " " << ve[1] << " " << ve[2] << "\n";
 			}
-			if(curr >= maxFrame - 1) {
+			if(curr >= params_.maxFrame - 1) {
+				std::cout << "Calculating Audio Data\n";
+				for(int i = 0; i < bodies_.size(); i++) {
+					RigidBodyInstance &body = *bodies_[i];
+					for(int f = 0; f < body.facePressures.size(); f++) {
+						aud.filterAudio2(params_.timeStep, body.facePressures[f]);
+					}
+					for(int f = 0; f < body.facePressures.size(); f++) {
+						for(int g = 0; g < body.facePressures[f].size(); g++) {
+							aud.addWithDelay(body.facePressures[f][g] * body.faceConstants[f][g], body.faceDelays[f][g]);
+						}
+					}
+				}
 				std::cout << "Outputting Data\n";
 				aud.dumpAudio(ofs);
+				std::cout << "Closing Output\n";
 				ofs.close();
 				std::cout << "Successfully wrote to render file\n";	
 				exit(0);	
@@ -346,6 +358,7 @@ bool BirdsHook::simulateOneStep()
 				for(int i = 0; i < numF; i++) {
 					body.faceDelays.push_back(std::vector<double>());
 					body.facePressures.push_back(std::vector<double>());
+					body.faceConstants.push_back(std::vector<double>());
 				}
 			}
 			for(int i = 0; i < numF; i++) {
@@ -370,10 +383,11 @@ bool BirdsHook::simulateOneStep()
 				//std::cout << "VIEW: " << fakeV.rows() << " " << fakeV.cols() << "\n";
 				//Eigen::Vector4f pdata = fakeP * fakeV * Eigen::Vector4f(0, 0, 0, 0);	
 				//std::cout << pdata[0] << "\n";	
-				double signal = pr * area * delta * co / (camdif.norm());
-				body.facePressures[i].push_back(signal);
+				double constant = area * delta * co / (camdif.norm());
+				body.facePressures[i].push_back(pr);
+				body.faceConstants[i].push_back(constant);
 				body.faceDelays[i].push_back(time_ + camdif.norm() / 343);
-				//aud.addWithDelay(signal, time_ + camdif.norm() / 343);
+				//aud.addWithDelay(signal, time_ + camdif.norm() / 343);	
 			}
 		}
 	}

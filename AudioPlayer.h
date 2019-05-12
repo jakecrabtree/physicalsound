@@ -24,7 +24,7 @@ class Sample {
 class AudioPlayer {
 	public:
 	long sampleID = 0;
-	double vol = 0;
+	float vol = 200;
 	static const int ssize = 44100 * 20;
 	std::vector<double> samples;
 	std::vector<double> filteredSamples;
@@ -34,9 +34,6 @@ class AudioPlayer {
 		AudioPlayer& ap = ((AudioPlayer*)userdata)[0];
 		long& currSample = ((long*)userdata)[0];
 		double v = ap.vol;
-		if(v > 2) {
-			v = 2;
-		}
 		int shorts = bytes >> 1;
 		for(int i = 0; i < shorts; i++) {
 			int index = (int)(currSample + i);
@@ -46,7 +43,7 @@ class AudioPlayer {
 				continue;
 			}
 			//std::cout << d << "\n";
-			rb[i] = (short) (ap.samples[index] * 20);
+			rb[i] = (short) (ap.samples[index] * v);
 			std::cout << rb[i] << "\n";
 			currSample++;
 		}
@@ -186,6 +183,16 @@ class AudioPlayer {
 		std::vector<double> blockedSamples;
 		dcBlockingFilter(filteredSamples, blockedSamples, 0.5);
 		convolutionFilter(blockedSamples, gaussianFilter(), samples);
+	}
+
+	void filterAudio2(double timeStep, std::vector<double>& pressures) {
+		std::vector<double> p2;
+		convolutionFilter(pressures, lowPassFilter(22050, 44010, std::ceil(6.0/(22050.0*timeStep))), p2);
+
+		//convolutionFilter(samples, lowPassFilter2(timeStep, std::ceil(3.0/(22050.0*timeStep)), 22050), filteredSamples);
+		std::vector<double> blockedSamples;
+		dcBlockingFilter(p2, blockedSamples, 0.5);
+		convolutionFilter(blockedSamples, gaussianFilter(), pressures);
 	}
 };
 

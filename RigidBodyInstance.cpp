@@ -17,11 +17,11 @@ RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
 	
 	double v = (double) poisson;
 	double E = (double) young;
-	lambda = /*2.65e6;//*/v * E / ((1 + v) * (1 - 2 * v));
-	mu = /*3.97e6;//*/E / (2 * (1 + v));
-	//phi = 264;
-	//psi = 367;
-	//density = 1013;
+	lambda = 2.65e6;//v * E / ((1 + v) * (1 - 2 * v));
+	mu = 3.97e6;//E / (2 * (1 + v));
+	phi = 264;
+	psi = 367;
+	density = 1013;
 	V = getTemplate().getVerts();
 	for(int i = 0; i < V.rows(); i++) {
 		V.row(i) = (c + VectorMath::rotationMatrix(theta)* V.row(i).transpose()).transpose();
