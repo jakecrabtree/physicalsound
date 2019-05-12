@@ -95,7 +95,8 @@ class AudioPlayer {
 		int index = (int)(delay * 44100);
 		while(index >= samples.size()) {
 			samples.push_back(0);
-		}		
+		}
+		samples[index] += sam;		
 	}
 
 	void dumpAudio(std::ofstream& o) {
