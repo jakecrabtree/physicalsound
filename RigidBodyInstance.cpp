@@ -11,14 +11,14 @@ using namespace std;
 RigidBodyInstance::RigidBodyInstance(const RigidBodyTemplate &rbtemplate,
     const Eigen::Vector3d &c, const Eigen::Vector3d &theta,
     const Eigen::Vector3d &cvel, const Eigen::Vector3d &w,
-    double density, double young, double poisson, double phi, double psi)
-    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate), phi(phi), psi(psi)
+    double density, double young, double poisson, double phi, double psi, Eigen::Vector3d &color)
+    : c(c), theta(theta), cvel(cvel), w(w), density(density), rbtemplate_(rbtemplate), phi(phi), psi(psi), color(color)
 {
 	
 	double v = (double) poisson;
 	double E = (double) young;
-	lambda = /*2.65e6;//*/v * E / ((1 + v) * (1 - 2 * v));
-	mu = /*3.97e6;//*/E / (2 * (1 + v));
+	lambda = young;//v * E / ((1 + v) * (1 - 2 * v));
+	mu = poisson;//E / (2 * (1 + v));
 	//phi = 264;
 	//psi = 367;
 	//density = 1013;

@@ -11,7 +11,7 @@ struct AABBNode;
 class RigidBodyInstance
 {
 public:
-    RigidBodyInstance(const RigidBodyTemplate &rbtemplate, const Eigen::Vector3d &c, const Eigen::Vector3d &theta, const Eigen::Vector3d &cvel, const Eigen::Vector3d &w, double density, double young, double mu, double phi, double psi);
+    RigidBodyInstance(const RigidBodyTemplate &rbtemplate, const Eigen::Vector3d &c, const Eigen::Vector3d &theta, const Eigen::Vector3d &cvel, const Eigen::Vector3d &w, double density, double young, double mu, double phi, double psi, Eigen::Vector3d &color);
     ~RigidBodyInstance();
 
     Eigen::Vector3d c;
@@ -47,7 +47,7 @@ public:
 	std::vector<std::vector<double>> faceConstants;
     std::vector<double> facePressureDelays;
     int currFacePressure = 0;
-
+	Eigen::Vector3d color;
     
 private:
     const RigidBodyTemplate &rbtemplate_;
